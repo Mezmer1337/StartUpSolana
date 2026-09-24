@@ -1,0 +1,20 @@
+[package]
+name = "petdna"
+version = "0.1.0"
+edition = "2021"
+description = "PetNFT DNA toolkit: a Rust port of backend/src/services/dnaService.ts (course week 3)"
+publish = false
+
+# Standalone crate — its own workspace, so it never shares a Cargo.lock with
+# the on-chain programs in programs/* (those are built by platform-tools'
+# rustc and pin their own dependency versions).
+[workspace]
+
+[dependencies]
+borsh = { version = "1.5", features = ["derive"] }
+bs58 = "0.5"
+clap = { version = "4.5", features = ["derive"] }
+getrandom = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"

@@ -12,6 +12,11 @@ Marketplace.
 реально работает end-to-end, а что упрощено и почему — в разделе
 [MVP / заглушки](#mvp--заглушки).
 
+> **Курс Solana, недели 2–5.** Задания силлабуса выполнены на этом проекте:
+> Transaction Detective (неделя 2), Rust CLI `petdna` (3), нативная программа
+> `pet_passport` (4) и Anchor Counter `pet_counter` (5). Обзор и разборы —
+> в [docs/course](docs/course/README.md).
+
 ## Содержание
 
 - [Концепция](#концепция)
@@ -81,9 +86,11 @@ Phantom Wallet  <──подписывает tx──>  Frontend (React)
     отправляет транзакции от вашего имени.
 - **Anchor-программа (`programs/petnft`):** *дополнительный*,
   необязательный ончейн-реестр PDA — см.
-  [Solana-программа](#solana-программа-anchor). В этом репозитории она
-  существует только как исходный код (написана, но не скомпилирована и
-  не задеплоена — в окружении сборки не было Rust/Solana/Anchor CLI).
+  [Solana-программа](#solana-программа-anchor). Anchor 1.2: компилируется
+  и проходит IDL-сборку, но в Devnet пока не задеплоена.
+- **Программы курса:** `programs/pet_counter` (Anchor, счётчик ухода) и
+  `native/pet_passport` (без Anchor, on-chain паспорт с `dnaHash`) — см.
+  [docs/course](docs/course/README.md).
 
 ## Генерация DNA и PRNG
 
@@ -279,8 +286,10 @@ SOL по этому разбиению (см. [MVP / заглушки](#mvp--з�
 - **Backend:** Node.js + Express + TypeScript
 - **База данных:** SQLite через Prisma ORM (переключение на PostgreSQL —
   одна строка, см. [`.env.example`](.env.example))
-- **Смарт-контракт:** Anchor + Rust (только исходники — см. оговорку выше)
-- **Тесты:** Vitest (backend)
+- **Смарт-контракты:** Anchor 1.2 + Rust (`petnft`, `pet_counter`),
+  нативная программа на `solana-program` (`pet_passport`)
+- **Rust CLI:** `petdna` — генератор ДНК, совместимый с бэкендом байт-в-байт
+- **Тесты:** Vitest (backend), `cargo test` (Rust), mocha + `anchor test` (программы)
 - **Пакетный менеджер:** npm
 
 ## Структура проекта
@@ -304,9 +313,15 @@ petnft/  (этот репозиторий)
 │   │   ├── middleware/     Обработка ошибок, валидация кошелька
 │   │   └── constants/      dna.ts, petData.ts, items.ts
 │   ├── prisma/             schema.prisma, миграции, seed.ts
-│   ├── scripts/            calibrate-rarity.ts (dev-инструмент калибровки редкости)
-│   └── tests/               dna/economy/color/leveling — см. "Тесты"
-├── programs/petnft/       Anchor-программа (Rust) — см. оговорку выше
+│   ├── scripts/            calibrate-rarity.ts, tx-detective.ts (неделя 2), export-dna-vectors.ts
+│   └── tests/               dna/economy/color/leveling/txDetective — см. "Тесты"
+├── programs/petnft/       Anchor-программа: реестр PetRecord
+├── programs/pet_counter/  Anchor Counter Program (неделя 5)
+├── native/pet_passport/   Нативная программа без Anchor (неделя 4)
+├── crates/petdna/         Rust CLI: ДНК, цена в lamports, Borsh PetRecord (неделя 3)
+├── clients/               TS-клиенты для Devnet: pet-passport.ts, pet-counter.ts
+├── tests/                 mocha-тесты Anchor-программ (anchor test)
+├── docs/course/           Разборы недель 2–5 курса
 ├── shared/                 Константы только для справки (см. файл, почему)
 ├── README.md
 └── .env.example
@@ -424,33 +439,33 @@ Metaplex — полное обоснование см. в doc-комментар
 включая честную оговорку про то, что проверка оплаты минта пока целиком
 на backend'е, а не в этой программе.
 
-**Эта программа не скомпилирована, не задеплоена и не протестирована** —
-в окружении сборки не было Rust/Solana/Anchor CLI. Приложение **не
-зависит** от неё — оплата минта и минт NFT работают так, как описано
-выше, вне зависимости от этого. Чтобы собрать и попробовать её
-самостоятельно:
+Программа переведена на **Anchor 1.2**: компилируется (`cargo check`) и
+проходит IDL-сборку. Под SBF она пока не собиралась, **в Devnet не задеплоена и
+тест на валидаторе не запускался**: на машине разработки нет Solana CLI.
+Приложение **не зависит** от неё — оплата минта и минт NFT работают так, как
+описано выше, вне зависимости от этого. Собрать и проверить её вместе с
+`pet_counter`:
 
 ```bash
-# 1. Установите Rust
+# 1. Rust и Solana CLI (на Windows — через WSL2)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# 2. Установите Solana CLI
 sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
 solana config set --url devnet
 solana-keygen new                       # создаст ~/.config/solana/id.json
 solana airdrop 2
 
-# 3. Установите Anchor (через avm, менеджер версий Anchor)
-cargo install --git https://github.com/coral-xyz/anchor avm --locked
-avm install latest && avm use latest
+# 2. Anchor 1.2 (версия зафиксирована в Anchor.toml)
+cargo install --git https://github.com/solana-foundation/anchor avm --locked
+avm install 1.2.0 && avm use 1.2.0
 
-# 4. Соберите и задеплойте (из корня репозитория)
-anchor build
-anchor deploy
-# скопируйте выведенный Program Id в Anchor.toml и в declare_id!(...) в lib.rs,
-# затем пересоберите и передеплойте
-anchor test
+# 3. Сборка, тесты, деплой (из корня репозитория)
+npm install
+anchor build && anchor keys sync && anchor build   # подставит свои program id
+anchor test --provider.cluster localnet
+anchor deploy --provider.cluster devnet
 ```
+
+Подробности — в [docs/course/week-05-anchor-counter.md](docs/course/week-05-anchor-counter.md).
 
 ## Тесты
 
@@ -459,7 +474,7 @@ cd backend
 npm test        # vitest run
 ```
 
-17 тестов, всё **чистая логика, без обращения к БД** (и потому
+26 тестов, всё **чистая логика, без обращения к БД и к сети** (и потому
 быстрая/детерминированная):
 
 - `tests/dna.test.ts` — один и тот же seed всегда даёт одну и ту же ДНК;
@@ -474,6 +489,13 @@ npm test        # vitest run
 - `tests/leveling.test.ts` — XP-пороги уровней 1–5 совпадают с
   дизайн-таблицей из ТЗ; `levelFromXp`/`xpForLevel` — точные обратные
   функции на 20 уровнях.
+- `tests/txDetective.test.ts` — Transaction Detective на двух сохранённых
+  реальных devnet-транзакциях (оплата минта и Metaplex `createNft`):
+  аккаунты, дерево CPI, разбор комиссии, пересчёт PDA.
+
+Rust: `cd crates/petdna && cargo test` (22 теста, включая сверку с
+TypeScript-генератором на 210 векторах) и `cd native/pet_passport && cargo test`
+(7 тестов логики программы). Anchor-программы: `anchor test`, см. выше.
 
 **Честно не покрыто тестами** (см. [Что дальше](#что-дальше)): anti-bot
 лимиты, инвентарь, маркетплейс — эти сервисы пишут в реальную БД, и
@@ -546,9 +568,10 @@ npm test        # vitest run
 - **Реализовано 2 из 4 мини-игр** (Reaction, Memory) — Catch и
   специализированная Training-игра не сделаны, а не подделаны под тем же
   API.
-- **Anchor-программа не собрана**, оплата минта и marketplace foundation
-  из ТЗ §30 в ней не реализованы — вся проверка сейчас на backend'е
-  напрямую через RPC. См. [Solana-программа](#solana-программа-anchor).
+- **Anchor-программа не задеплоена** (компилируется, но под SBF не
+  собиралась), оплата минта и marketplace foundation из ТЗ §30 в ней не
+  реализованы — вся проверка сейчас на backend'е напрямую через RPC.
+  См. [Solana-программа](#solana-программа-anchor).
 - **Anti-cheat мини-игр минимален** — сервер ограничивает частоту и
   диапазон очков, но не может полностью проверить, что присланный `score`
   честный (нужен был бы серверный replay игрового ввода).

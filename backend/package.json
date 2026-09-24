@@ -12,7 +12,9 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:seed": "tsx prisma/seed.ts",
-    "db:setup": "prisma migrate dev --name init && tsx prisma/seed.ts"
+    "db:setup": "prisma migrate dev --name init && tsx prisma/seed.ts",
+    "tx:detect": "tsx scripts/tx-detective.ts",
+    "dna:vectors": "tsx scripts/export-dna-vectors.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.1",

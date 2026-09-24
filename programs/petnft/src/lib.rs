@@ -1,12 +1,10 @@
 //! PetNFT on-chain pet registry.
 //!
 //! IMPORTANT — MVP SCOPE (see repo README "MVP / mock" section):
-//! This program has been written but NOT compiled, deployed, or tested —
-//! the development container used to build the rest of this repo has no
-//! Rust/Solana/Anchor toolchain installed. Treat this file as a solid
-//! starting point, not a verified build. See README for the exact steps
-//! to install the toolchain, run `anchor build`, fix any compile errors
-//! that surface, and deploy to devnet.
+//! Targets Anchor 1.2 and compiles on the host (`cargo check`, including
+//! `--features idl-build`), but has NOT been built for SBF, deployed or
+//! run on-chain yet. See docs/course/week-05-anchor-counter.md for the
+//! build / deploy / test steps shared with programs/pet_counter.
 //!
 //! What this program does: the actual NFT (mint account, SPL Token
 //! account, Metaplex Token Metadata account) is created by the frontend
@@ -82,6 +80,8 @@ pub enum PetType {
     Dragon,
 }
 
+/// Same six tiers, in the same order, as RARITIES in backend/src/constants/dna.ts
+/// (Borsh stores the variant index, so order matters).
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
 pub enum Rarity {
     Common,
@@ -89,6 +89,7 @@ pub enum Rarity {
     Rare,
     Epic,
     Legendary,
+    Mythic,
 }
 
 #[account]

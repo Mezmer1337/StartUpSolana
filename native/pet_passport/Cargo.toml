@@ -1,0 +1,30 @@
+[package]
+name = "pet_passport"
+version = "0.1.0"
+description = "PetNFT pet passport: a native Solana program without Anchor (course week 4)"
+edition = "2021"
+publish = false
+
+# Standalone workspace: built with `cargo build-sbf`, not by `anchor build`.
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+# Lets other crates depend on this one (e.g. for its instruction builders)
+# without pulling in a second program entrypoint.
+no-entrypoint = []
+# Checked by the entrypoint! macro.
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+borsh = { version = "1.5", features = ["derive"] }
+solana-program = "3.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
+
+[profile.release]
+overflow-checks = true

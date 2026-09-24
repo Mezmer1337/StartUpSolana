@@ -1,0 +1,26 @@
+{
+  "name": "petnft-onchain",
+  "private": true,
+  "description": "Anchor tests and devnet clients for the PetNFT programs (course weeks 4-5)",
+  "scripts": {
+    "passport": "tsx clients/pet-passport.ts",
+    "counter": "tsx clients/pet-counter.ts",
+    "test:anchor": "ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@anchor-lang/core": "^1.2.0",
+    "@solana/web3.js": "^1.98.4"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.16.5",
+    "chai": "^4.3.4",
+    "mocha": "^10.8.2",
+    "ts-mocha": "^10.0.0",
+    "tsx": "^4.19.1",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,12 +1,12 @@
 [package]
-name = "petnft"
+name = "pet_counter"
 version = "0.1.0"
-description = "PetNFT on-chain pet registry: pairs a PDA record with a Metaplex NFT mint"
+description = "PetNFT care counter: an Anchor Counter Program (course week 5)"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "petnft"
+name = "pet_counter"
 
 [features]
 default = []
