@@ -5,7 +5,13 @@ import { assert, expect } from "chai";
 import type { PetCounter } from "../target/types/pet_counter";
 
 describe("pet_counter", () => {
-  const provider = anchor.AnchorProvider.env();
+  // "confirmed" rather than the default "processed": the tests read back
+  // transaction logs (getTransaction needs >= confirmed) and it matches the client.
+  const env = anchor.AnchorProvider.env();
+  const provider = new anchor.AnchorProvider(env.connection, env.wallet, {
+    commitment: "confirmed",
+    preflightCommitment: "confirmed",
+  });
   anchor.setProvider(provider);
   const program = anchor.workspace.petCounter as Program<PetCounter>;
 
@@ -16,6 +22,20 @@ describe("pet_counter", () => {
     PublicKey.findProgramAddressSync([Buffer.from("care"), owner.toBuffer(), Buffer.from(id)], program.programId)[0];
   const counter = counterFor(authority, petId);
   const accounts = { authority, counter };
+
+  /**
+   * Two `increment()` calls from the same signer are byte-identical if they
+   * share a recent blockhash — same bytes, same signature — and the cluster
+   * drops the second one as "already processed". Wait for a fresh blockhash
+   * before repeating an identical instruction.
+   */
+  async function nextBlockhash() {
+    const { blockhash } = await provider.connection.getLatestBlockhash();
+    for (let i = 0; i < 50; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      if ((await provider.connection.getLatestBlockhash()).blockhash !== blockhash) return;
+    }
+  }
 
   async function expectAnchorError(promise: Promise<unknown>, codes: string[]) {
     try {
@@ -41,6 +61,7 @@ describe("pet_counter", () => {
 
   it("increments and decrements, emitting CareCounterChanged", async () => {
     await program.methods.increment().accountsPartial(accounts).rpc();
+    await nextBlockhash();
     await program.methods.increment().accountsPartial(accounts).rpc();
     const signature = await program.methods.decrement().accountsPartial(accounts).rpc({ commitment: "confirmed" });
 

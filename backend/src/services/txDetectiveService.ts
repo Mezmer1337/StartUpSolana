@@ -183,6 +183,13 @@ export interface TxReportOptions {
   labels?: Record<string, string>;
   /** When set, SOL transfers to this address are flagged as PetNFT mint payments. */
   treasuryWallet?: string;
+  /** Deployed native/pet_passport program: a native program has no IDL, so we decode its Borsh enum ourselves. */
+  passportProgramId?: string;
+}
+
+interface DecodeContext {
+  labels: Record<string, string>;
+  passportProgramId?: string;
 }
 
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -234,12 +241,30 @@ function decodeComputeBudget(data: Uint8Array): { name: string; details: Record<
   }
 }
 
+/** PassportInstruction from native/pet_passport/src/instruction.rs: variant byte, then Borsh fields. */
+function decodePassportInstruction(data: Uint8Array): { name: string; details: Record<string, unknown>; roles: string[] } {
+  const buf = Buffer.from(data);
+  if (buf[0] === 0 && buf.length >= 5) {
+    const nameLen = buf.readUInt32LE(1);
+    return {
+      name: "CreatePassport",
+      details: {
+        name: buf.subarray(5, 5 + nameLen).toString("utf8"),
+        dnaHash: buf.subarray(5 + nameLen, 5 + nameLen + 32).toString("hex"),
+      },
+      roles: ["owner", "passport"],
+    };
+  }
+  if (buf[0] === 1) return { name: "Feed", details: {}, roles: ["owner", "passport"] };
+  return { name: "unknown", details: { variant: buf[0] }, roles: [] };
+}
+
 function describeInstruction(
   ix: ParsedInstruction | PartiallyDecodedInstruction,
-  labels: Record<string, string>
+  ctx: DecodeContext
 ): Pick<TxInstructionRow, "programId" | "programName" | "name" | "details" | "accounts"> {
   const programId = String(ix.programId);
-  const programName = labels[programId] ?? KNOWN_ADDRESSES[programId] ?? "Unknown program";
+  const programName = ctx.labels[programId] ?? KNOWN_ADDRESSES[programId] ?? "Unknown program";
 
   if (isParsed(ix)) {
     // The RPC node decoded it for us (System, SPL Token, ATA, Memo, ...).
@@ -264,6 +289,8 @@ function describeInstruction(
     name = known?.name ?? `instruction #${data[0]}`;
     details = { discriminator: data[0] };
     roles = known?.accounts ?? [];
+  } else if (programId === ctx.passportProgramId) {
+    ({ name, details, roles } = decodePassportInstruction(data));
   } else if (data.length >= 8) {
     const anchorName = ANCHOR_DISCRIMINATORS.get(Buffer.from(data.subarray(0, 8)).toString("hex"));
     if (anchorName) {
@@ -281,13 +308,13 @@ function describeInstruction(
   };
 }
 
-function flattenInstructions(tx: ParsedTransactionWithMeta, labels: Record<string, string>): TxInstructionRow[] {
+function flattenInstructions(tx: ParsedTransactionWithMeta, ctx: DecodeContext): TxInstructionRow[] {
   const inner = new Map<number, (ParsedInstruction | PartiallyDecodedInstruction)[]>();
   for (const group of tx.meta?.innerInstructions ?? []) inner.set(group.index, group.instructions);
 
   const rows: TxInstructionRow[] = [];
   tx.transaction.message.instructions.forEach((ix, i) => {
-    rows.push({ path: String(i + 1), depth: 0, ...describeInstruction(ix, labels) });
+    rows.push({ path: String(i + 1), depth: 0, ...describeInstruction(ix, ctx) });
 
     // stackHeight: 1 = top-level, 2 = CPI made by it, 3 = CPI made by that CPI...
     // Turn it into "3.1", "3.1.1", "3.2" style paths.
@@ -300,7 +327,7 @@ function flattenInstructions(tx: ParsedTransactionWithMeta, labels: Record<strin
       rows.push({
         path: [i + 1, ...Array.from(counters.slice(0, depth), (c) => c ?? 1)].join("."),
         depth,
-        ...describeInstruction(child, labels),
+        ...describeInstruction(child, ctx),
       });
     }
   });
@@ -442,7 +469,7 @@ export function buildTxReport(
     };
   });
 
-  const instructions = flattenInstructions(tx, labels);
+  const instructions = flattenInstructions(tx, { labels, passportProgramId: options.passportProgramId });
   const invocations = new Map<string, number>();
   for (const ix of instructions) invocations.set(ix.programId, (invocations.get(ix.programId) ?? 0) + 1);
 

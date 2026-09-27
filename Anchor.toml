@@ -6,15 +6,13 @@ package_manager = "npm"
 resolution = true
 skip-lint = false
 
-# Placeholder ids: after the first `anchor build`, run `anchor keys sync` to
-# replace them (here and in declare_id!) with the keypairs in target/deploy/.
-[programs.localnet]
-petnft = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
-pet_counter = "8TnwTkQSN3ake8jpriV3kkRdDsK3LDNKPoSJg8ozeZpJ"
-
 [programs.devnet]
-petnft = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
-pet_counter = "8TnwTkQSN3ake8jpriV3kkRdDsK3LDNKPoSJg8ozeZpJ"
+pet_counter = "F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P"
+petnft = "nDWNF4Za1PgtFxUBfvfuXf3A6AKrGyq6vu7jwWTRzfJ"
+
+[programs.localnet]
+pet_counter = "F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P"
+petnft = "nDWNF4Za1PgtFxUBfvfuXf3A6AKrGyq6vu7jwWTRzfJ"
 
 [provider]
 cluster = "devnet"
@@ -22,3 +20,5 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "npx ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""
+
+[hooks]

@@ -94,22 +94,46 @@ passport, чужой owner-program, не rent-exempt, пустое и длинн
 владелец, мусор вместо данных инструкции, байтовая раскладка инструкций,
 `LEN` для максимального паспорта.
 
+## Проверка on-chain (локальный валидатор)
+
+Программа собрана под SBF (`cargo build-sbf`, platform-tools 1.57):
+`pet_passport.so` весит **69 568 байт**. Она задеплоена в локальный валидатор
+`surfpool` и прогнана клиентом `clients/pet-passport.ts`:
+
+```
+$ npm run passport -- create --name Blaze --dna 63126e9e…3309ba
+passport   4tVjf2y1pNcfSGXmxunzo4Fch2uRrnDr335WWDCKUji4  (125 bytes, 1760880 lamports rent)
+name       Blaze
+dnaHash    63126e9e4dd0904cb9e05739d990087a000e2d4d6039ab64925e442a203309ba
+feedings   0
+$ npm run passport -- feed --passport 4tVjf2y1…
+feedings   1
+$ npm run passport -- feed --passport 4tVjf2y1…      # через 2 секунды
+pet_passport error: FeedCooldown
+Program log: Instruction: Feed
+Program 2k6jZXKS… failed: custom program error: 0x5
+```
+
+То есть инициализация, запись `dnaHash`, счётчик и кулдаун по `Clock`
+работают в настоящем рантайме Solana, а не только в host-тестах. Как
+повторить на Windows: [windows-toolchain.md](windows-toolchain.md).
+
 ## Сборка и деплой в Devnet
 
-Нужны Solana CLI (Agave) и Rust. На Windows удобнее всего через WSL2 (Ubuntu),
-инструкция установки: <https://solana.com/docs/intro/installation>.
+Нужны Solana CLI (Agave) и Rust. На Windows можно без WSL, см.
+[windows-toolchain.md](windows-toolchain.md).
 
 ```bash
-# 1. Кошелёк и devnet SOL (деплой стоит примерно 0.5–1.5 SOL за rent программы)
+# 1. Кошелёк и devnet SOL (rent программы ≈ 0.35 SOL, на время деплоя нужно вдвое больше)
 solana config set --url devnet
 solana-keygen new                 # ~/.config/solana/id.json
-solana airdrop 2                  # или https://faucet.solana.com
+# пополнить: https://faucet.solana.com или перевод из Phantom (Devnet); `solana airdrop` обычно упирается в лимит
 
 # 2. Сборка под SBF и деплой
 cd native/pet_passport
 cargo build-sbf                   # target/deploy/pet_passport.so + pet_passport-keypair.json
 solana program deploy target/deploy/pet_passport.so
-# → Program Id: <PROGRAM_ID>
+# → Program Id: 2k6jZXKSG5tHuksuMiiuvPYxK4av3WyTQMMidzmmNB2U (наш деплой, см. ниже)
 
 # 3. Взаимодействие (из корня репозитория)
 cd ../..
@@ -125,17 +149,46 @@ npm run passport -- show --passport <адрес паспорта>
 программы он переводит обратно в имена.
 
 Rent-exempt минимум паспорта на devnet сейчас — 1 285 240 lamports
-(≈0.0013 SOL). Его платит `createAccount`.
+(≈0.0013 SOL). Его платит `createAccount`. В локальном валидаторе ставка rent
+классическая, поэтому там 1 760 880 lamports.
+
+## Задеплоено в Devnet ✅
+
+| Что | Адрес / подпись |
+|---|---|
+| Программа `pet_passport` | [`2k6jZXKSG5tHuksuMiiuvPYxK4av3WyTQMMidzmmNB2U`](https://explorer.solana.com/address/2k6jZXKSG5tHuksuMiiuvPYxK4av3WyTQMMidzmmNB2U?cluster=devnet) — 69 568 байт, rent 0.354 SOL |
+| Деплой | [`4aQFRpum…NVCgR66`](https://explorer.solana.com/tx/4aQFRpumJpkWrKwLS4XTHJk5sey7DXmQJCi8MSeQLgp2cfY5PWLbqrYAei39vgXuA4f6bEk9Jvax9VqGbNVCgR66?cluster=devnet) |
+| Паспорт питомца «Blaze» | [`5C7v14juurhN37qX7n6JnRa9kvLA5CEPgwriTqXkdv6K`](https://explorer.solana.com/address/5C7v14juurhN37qX7n6JnRa9kvLA5CEPgwriTqXkdv6K?cluster=devnet) — `dnaHash 63126e9e…3309ba` |
+| `CreatePassport` | [`2XFGVH8h…uTAj6u`](https://explorer.solana.com/tx/2XFGVH8hFcfzMjUaptAyvVscJ7w53YTNn9umxEddNpWdHcW152RXRGAK6V3U4Pm2rcWNUVbFjcM7sENEUGuTAj6u?cluster=devnet) |
+| `Feed` | [`UbHHfnuJ…vv4Y3`](https://explorer.solana.com/tx/UbHHfnuJXWGaduECexGQcDJQi164MoUjtH3jZ7KGYXSQx3YBa3s9x7mMXCkMGHk6dQKwBL2jBUWEs8UPjVvv4Y3?cluster=devnet) |
+| Повторный `Feed` сразу же | отклонён программой: `custom program error: 0x5` = `FeedCooldown` |
+
+Upgrade authority и владелец паспорта — CLI-кошелёк деплоера
+`8LNCwYwdz3gW75dGKsZQk7WAPKsGD7Nur5RLy8AWYvf7`.
 
 ## Связь с неделей 2
 
-Разберите собственную транзакцию детективом:
+Детектив из недели 2 знает формат нашей программы (`PET_PASSPORT_PROGRAM_ID`
+в `backend/.env`) и расшифровывает её инструкции, хотя IDL у нативной
+программы нет. Разбор настоящей devnet-транзакции `CreatePassport`:
 
-```bash
-cd backend
-PET_PASSPORT_PROGRAM_ID=<PROGRAM_ID> npm run tx:detect -- <signature> --logs
+```
+$ npm run tx:detect -- 2XFGVH8h…uTAj6u --logs
+ACCOUNTS
+   0  8LNCwYwd…AWYvf7  SWF-                              3.17701436 -> 3.17571912 (-0.00129524 SOL)
+   1  5C7v14ju…kdv6K   SW--                              0 -> 0.00128524 (+0.00128524 SOL)
+   2  11111111…11111   ----  System Program
+   3  2k6jZXKS…MNB2U   ----  PetNFT pet_passport (native)
+INSTRUCTIONS
+  1  System Program :: createAccount   lamports=1285240 space=125 owner=2k6jZXKS…
+  2  PetNFT pet_passport (native) :: CreatePassport   name=Blaze  dnaHash=63126e9e…3309ba
+       owner     8LNCwYwd…AWYvf7
+       passport  5C7v14ju…kdv6K
+LOGS
+  Program log: Instruction: CreatePassport
+  Program log: Passport for Blaze created, owner 8LNCwYwd…AWYvf7
+  Program 2k6jZXKS… consumed 9008 of 202850 compute units
 ```
 
-Вы увидите 2 инструкции верхнего уровня (`System :: createAccount` и нашу
-программу), аккаунт паспорта с флагами `S W` и `+0.00128524 SOL`, а в логах
-`Program log: Instruction: CreatePassport`.
+Эта транзакция сохранена фикстурой `backend/tests/fixtures/tx-passport-create.json`
+и покрыта тестом.

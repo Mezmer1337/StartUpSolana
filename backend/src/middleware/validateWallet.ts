@@ -2,8 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { ApiError } from "./errorHandler";
 
 // Solana addresses are base58, 32-44 chars. This is a format check only —
-// the MVP does not verify a cryptographic signature proving the caller
-// actually controls the wallet (see README "MVP / mock" section for why).
+// proof that the caller controls the wallet comes from Sign In With Solana
+// (services/authService.ts + middleware/auth.ts).
 const BASE58_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
 export function isValidWalletAddress(address: unknown): address is string {

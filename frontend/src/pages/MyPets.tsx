@@ -1,23 +1,18 @@
 import { useState } from "react";
 import type { FC } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { PetCard } from "../components/PetCard";
+import { SignInPrompt } from "../components/AuthButton";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
 import { CreatePetModal } from "../components/CreatePetModal";
 import { useGameData } from "../context/GameDataContext";
 
 export const MyPets: FC = () => {
-  const { connected } = useWallet();
+  const { signedIn } = useAuth();
   const { pets, loading } = useGameData();
   const [createOpen, setCreateOpen] = useState(false);
 
-  if (!connected) {
-    return (
-      <div className="text-center py-20">
-        <p className="text-gray-400">Connect your wallet to view your pets.</p>
-      </div>
-    );
-  }
+  if (!signedIn) return <SignInPrompt action="view your pets" />;
 
   return (
     <div>

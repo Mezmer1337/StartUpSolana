@@ -75,8 +75,8 @@ Anchor 1.2, в `Rarity` добавлен **`Mythic`**. Бэкенд генери
 
 ## Сборка, тесты, деплой
 
-Нужны Solana CLI (Agave), Rust и Anchor 1.2 (через `avm`). На Windows — через
-WSL2. `Anchor.toml` фиксирует `anchor_version = "1.2.0"`.
+Нужны Solana CLI (Agave), Rust и Anchor 1.2. `Anchor.toml` фиксирует
+`anchor_version = "1.2.0"`. На Linux/macOS/WSL:
 
 ```bash
 cargo install --git https://github.com/solana-foundation/anchor avm --locked
@@ -84,12 +84,25 @@ avm install 1.2.0 && avm use 1.2.0
 
 npm install                                  # @anchor-lang/core, mocha, ts-mocha
 anchor build                                 # target/deploy/*.so, target/idl/*.json, target/types/*.ts
-anchor keys sync                             # подставить свои program id в declare_id! и Anchor.toml
-anchor build                                 # пересобрать с новыми id
-
-anchor test --provider.cluster localnet      # локальный валидатор, tests/pet-counter.ts + tests/petnft.ts
-anchor deploy --provider.cluster devnet      # деплой (нужны devnet SOL: solana airdrop 2)
+anchor test --provider.cluster localnet      # локальный валидатор surfpool + tests/*.ts
+anchor deploy --provider.cluster devnet      # деплой (нужны devnet SOL)
 ```
+
+На Windows без WSL `anchor test` целиком не работает: он запускает тесты через
+`bash`, а локальный валидатор требует прав на символические ссылки. Рабочая
+последовательность — в [windows-toolchain.md](windows-toolchain.md).
+
+Program id в репозитории уже синхронизированы (`anchor keys sync`) с
+keypair'ами, из которых программы деплоились:
+
+| Программа | Program id |
+|---|---|
+| `pet_counter` | `F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P` |
+| `petnft` | `nDWNF4Za1PgtFxUBfvfuXf3A6AKrGyq6vu7jwWTRzfJ` |
+
+Keypair'ы лежат в `target/deploy/` и в git не попадают. Если кто-то в команде
+захочет задеплоить *свою* копию, ему нужно выполнить `anchor keys sync` у себя.
+Тогда адреса поменяются, и их нельзя коммитить поверх общих.
 
 Тесты `tests/pet-counter.ts`:
 
@@ -116,18 +129,45 @@ npm run counter -- close --pet cm1abcdefghijklmnopqrstu     # вернуть ren
 программы показывает по имени (`AnchorError`). Кошелёк —
 `~/.config/solana/id.json` или `ANCHOR_WALLET`, RPC — devnet или `SOLANA_RPC_URL`.
 
-## Что проверено без Solana CLI
+## Задеплоено в Devnet ✅
 
-- `cargo check --workspace`: обе программы на `anchor-lang` 1.2.0 без предупреждений;
-- IDL-сборка `cargo test __anchor_private_print_idl --features idl-build` (её
-  же запускает `anchor build`) для обеих программ. Она поймала ошибку,
-  которая сломала бы `anchor build`: `#[constant]` на `usize` (в IDL нет
-  такого типа). Исправлено;
-- из полученного IDL сгенерированы TS-типы; `tsc` проходит для
-  `clients/*.ts` и `tests/*.ts`;
-- офлайн через `@anchor-lang/core`: дискриминаторы всех инструкций,
-  кодирование `pet_id`, флаги аккаунтов `initialize`, раскладка `CareCounter`
-  (authority на смещении 8, на этом держится `list`), парсинг события `careCounterChanged`.
+| Что | Адрес / подпись |
+|---|---|
+| Программа `pet_counter` | [`F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P`](https://explorer.solana.com/address/F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P?cluster=devnet) — 146 056 байт, rent 0.743 SOL |
+| Программа `petnft` | [`nDWNF4Za1PgtFxUBfvfuXf3A6AKrGyq6vu7jwWTRzfJ`](https://explorer.solana.com/address/nDWNF4Za1PgtFxUBfvfuXf3A6AKrGyq6vu7jwWTRzfJ?cluster=devnet) — 139 624 байта, rent 0.710 SOL |
+| Счётчик ухода демо-питомца `cm1petnftdemo0000000000001` | [`CUCbecNZ5VEECs5N49JKMWhvb1fa8MmGfUeLyzZW9zT8`](https://explorer.solana.com/address/CUCbecNZ5VEECs5N49JKMWhvb1fa8MmGfUeLyzZW9zT8?cluster=devnet) — count = 2 |
+| `initialize` | [`3o9ZD7uv…xkwHG7jnA`](https://explorer.solana.com/tx/3o9ZD7uvXNQmNhLs2WuTiTFoUB7xv5L4oUbdywnko8F38hsQSmKMfcMswr2w6m9roFJD37cQXKsMLefxkwHG7jnA?cluster=devnet) |
+| `increment` | [`4Wu7o29K…yArkD2ib`](https://explorer.solana.com/tx/4Wu7o29Kdb13iXCGd6XVGXT3bHyShZZDeJtRG5DnKLTkXWDr6BfB76U2XRJ8BeMVU2FSLRabAPywHSYUyArkD2ib?cluster=devnet) — событие `careCounterChanged: count=1` |
 
-Не проверено: SBF-сборка, `anchor test` на валидаторе и деплой. Для них нужны
-Solana CLI и devnet SOL.
+**mocha-тесты против Devnet: 7/7** (`ANCHOR_PROVIDER_URL=https://api.devnet.solana.com`).
+Клиент в Devnet прошёл `init → inc → inc → dec → inc → list`, счётчик
+оставлен живым для проверки.
+
+IDL в сеть не загружен: `anchor deploy` в 1.2 пишет его через программу
+Program Metadata и падает с `program not found`. Клиенту и тестам on-chain IDL
+не нужен, они берут `target/idl/pet_counter.json`. Детектив из недели 2
+распознаёт `increment` по дискриминатору и без IDL (тест на фикстуре
+`backend/tests/fixtures/tx-counter-increment.json`).
+
+## Что проверено локально
+
+- `anchor build` (Anchor CLI 1.2.0, platform-tools 1.57): `pet_counter.so`
+  146 056 байт, `petnft.so` 139 624 байта, IDL и TS-типы сгенерированы.
+  Раньше IDL-сборка поймала ошибку, которая сломала бы `anchor build`:
+  `#[constant]` на `usize`, в IDL нет такого типа. Исправлено;
+- обе программы задеплоены в локальный валидатор `surfpool`, **mocha-тесты
+  7/7** (`tests/pet-counter.ts` 6 + `tests/petnft.ts` 1), два прогона подряд;
+- по ходу тесты нашли свою же ошибку: два одинаковых `increment()` подряд
+  с одним recent blockhash дают одинаковую подпись, и второй отклоняется
+  как `already processed`. Тест теперь ждёт новый blockhash;
+- клиент `clients/pet-counter.ts` прогнан на валидаторе целиком:
+
+```
+init   → count 0
+inc    → event careCounterChanged: count=1
+inc    → event careCounterChanged: count=2
+dec    → event careCounterChanged: count=1
+list   → CUCbecNZ…  pet cm1petnftdemo0000000000001  count 1
+reset, dec → pet_counter error Underflow: Counter is already zero
+close  → closed, rent refunded
+```

@@ -1,11 +1,10 @@
 import type { FC } from "react";
 import { useNavigate } from "react-router-dom";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
 
 const STEPS = [
-  { icon: "👛", title: "Connect Wallet", desc: "Link your Phantom wallet on Solana Devnet — no seed phrase ever leaves your extension." },
+  { icon: "👛", title: "Sign in with Phantom", desc: "Sign a one-time message with your Phantom wallet on Solana Devnet — no transaction, no fee, no seed phrase ever leaves your extension." },
   { icon: "🥚", title: "Create a Pet", desc: "Choose a species, color and rarity to bring your companion to life." },
   { icon: "🎮", title: "Feed, Play & Train", desc: "Care for your pet daily to raise its stats and level it up." },
   { icon: "⛓", title: "Mint as NFT", desc: "Turn your pet into a real Metaplex-standard NFT you truly own on-chain." },
@@ -19,13 +18,12 @@ const FEATURES = [
 ];
 
 export const Landing: FC = () => {
-  const { connected } = useWallet();
-  const { setVisible } = useWalletModal();
+  const { signedIn, status, signIn } = useAuth();
   const navigate = useNavigate();
 
   const handlePrimaryCta = () => {
-    if (connected) navigate("/pets");
-    else setVisible(true);
+    if (signedIn) navigate("/pets");
+    else void signIn();
   };
 
   return (
@@ -43,7 +41,13 @@ export const Landing: FC = () => {
         </p>
         <div className="flex gap-3">
           <Button onClick={handlePrimaryCta} className="!px-6 !py-3 !text-base">
-            {connected ? "Go to My Pets" : "Connect Wallet"}
+            {signedIn
+              ? "Go to My Pets"
+              : status === "signing-in"
+              ? "Confirm in Phantom…"
+              : status === "connected"
+              ? "Sign in"
+              : "Sign in with Phantom"}
           </Button>
           <Button variant="secondary" onClick={() => navigate("/marketplace")} className="!px-6 !py-3 !text-base">
             Explore Marketplace

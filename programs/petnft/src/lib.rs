@@ -30,7 +30,7 @@
 
 use anchor_lang::prelude::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("nDWNF4Za1PgtFxUBfvfuXf3A6AKrGyq6vu7jwWTRzfJ");
 
 #[program]
 pub mod petnft {

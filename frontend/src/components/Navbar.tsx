@@ -1,8 +1,8 @@
 import type { FC } from "react";
 import { NavLink } from "react-router-dom";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAuth } from "../context/AuthContext";
 import { useWalletBalance } from "../hooks/useWalletBalance";
+import { AuthButton } from "./AuthButton";
 
 const links = [
   { to: "/", label: "Home", end: true },
@@ -16,7 +16,7 @@ const links = [
 ];
 
 export const Navbar: FC = () => {
-  const { connected, publicKey } = useWallet();
+  const { signedIn } = useAuth();
   const balance = useWalletBalance();
 
   return (
@@ -45,12 +45,12 @@ export const Navbar: FC = () => {
         </nav>
 
         <div className="flex items-center gap-3">
-          {connected && publicKey && (
+          {signedIn && (
             <span className="hidden sm:inline text-xs text-gray-400 glass rounded-full px-3 py-1.5">
               {balance !== null ? `${balance.toFixed(2)} SOL` : "…"}
             </span>
           )}
-          <WalletMultiButton style={{ background: "linear-gradient(90deg,#8b5cf6,#6366f1)", height: 40 }} />
+          <AuthButton />
         </div>
       </div>
 

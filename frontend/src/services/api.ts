@@ -8,6 +8,47 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000
 
 export const api = axios.create({ baseURL: API_BASE_URL });
 
+// ---- Session token from Sign In With Solana (see context/AuthContext.tsx) ----
+
+let authToken: string | null = null;
+let onUnauthorized: (() => void) | null = null;
+
+export function setAuthToken(token: string | null) {
+  authToken = token;
+}
+
+/** Called when the backend rejects our session token (expired or revoked). */
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorized = handler;
+}
+
+api.interceptors.request.use((config) => {
+  if (authToken) config.headers.Authorization = `Bearer ${authToken}`;
+  return config;
+});
+
+api.interceptors.response.use(undefined, (error) => {
+  if (axios.isAxiosError(error) && error.response?.status === 401 && error.config?.headers?.Authorization) {
+    onUnauthorized?.();
+  }
+  return Promise.reject(error);
+});
+
+export interface AuthSession {
+  token: string;
+  wallet: string;
+  expiresAt: string;
+}
+
+export const authApi = {
+  nonce: (wallet: string) =>
+    api.post<{ nonce: string; message: string; expiresAt: string }>("/auth/nonce", { wallet }).then((r) => r.data),
+  verify: (wallet: string, nonce: string, signature: string) =>
+    api.post<AuthSession>("/auth/verify", { wallet, nonce, signature }).then((r) => r.data),
+  session: () => api.get<{ wallet: string }>("/auth/session").then((r) => r.data),
+  logout: () => api.post("/auth/logout"),
+};
+
 export interface MintPetResult {
   pet: Pet;
   pricePaidSol: number;

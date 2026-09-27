@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { FC, ReactNode } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
 import type { Pet } from "../types/pet";
 import type { InventoryEntry } from "../types/item";
 import type { UserAccount } from "../types/user";
 import { inventoryApi, petApi, userApi } from "../services/api";
+import { useAuth } from "./AuthContext";
 
 interface GameDataState {
   wallet: string | null;
@@ -21,8 +21,8 @@ interface GameDataState {
 const GameDataContext = createContext<GameDataState | null>(null);
 
 export const GameDataProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const { publicKey } = useWallet();
-  const wallet = publicKey?.toBase58() ?? null;
+  // Game data belongs to the signed-in wallet, not merely a connected one.
+  const { wallet } = useAuth();
 
   const [user, setUser] = useState<UserAccount | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);

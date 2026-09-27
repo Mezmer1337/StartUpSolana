@@ -12,7 +12,7 @@
 
 use anchor_lang::prelude::*;
 
-declare_id!("8TnwTkQSN3ake8jpriV3kkRdDsK3LDNKPoSJg8ozeZpJ");
+declare_id!("F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P");
 
 #[constant]
 pub const COUNTER_SEED: &[u8] = b"care";

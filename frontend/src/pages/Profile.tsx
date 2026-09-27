@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { FC } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAuth } from "../context/AuthContext";
 import { useGameData } from "../context/GameDataContext";
+import { SignInPrompt } from "../components/AuthButton";
 import { useWalletBalance } from "../hooks/useWalletBalance";
 import { Button } from "../components/Button";
 import { useToast } from "../context/ToastContext";
@@ -10,7 +11,7 @@ import { PET_EMOJI } from "../types/pet";
 import { Link } from "react-router-dom";
 
 export const Profile: FC = () => {
-  const { connected, publicKey } = useWallet();
+  const { wallet } = useAuth();
   const { user, pets, inventory, refreshAll } = useGameData();
   const balance = useWalletBalance();
   const { showToast } = useToast();
@@ -18,15 +19,11 @@ export const Profile: FC = () => {
   const [rewardStatus, setRewardStatus] = useState<{ canClaim: boolean; nextAvailableAt: string | null } | null>(null);
   const [claiming, setClaiming] = useState(false);
 
-  const wallet = publicKey?.toBase58();
-
   useEffect(() => {
     if (wallet) dailyRewardApi.status(wallet).then(setRewardStatus);
   }, [wallet, user]);
 
-  if (!connected || !wallet) {
-    return <p className="text-gray-400 text-center py-20">Connect your wallet to view your profile.</p>;
-  }
+  if (!wallet) return <SignInPrompt action="view your profile" />;
 
   const claimReward = async () => {
     setClaiming(true);

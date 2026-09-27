@@ -5,7 +5,11 @@ import { expect } from "chai";
 import type { Petnft } from "../target/types/petnft";
 
 describe("petnft", () => {
-  const provider = anchor.AnchorProvider.env();
+  const env = anchor.AnchorProvider.env();
+  const provider = new anchor.AnchorProvider(env.connection, env.wallet, {
+    commitment: "confirmed",
+    preflightCommitment: "confirmed",
+  });
   anchor.setProvider(provider);
   const program = anchor.workspace.petnft as Program<Petnft>;
 

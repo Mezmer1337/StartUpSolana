@@ -13,27 +13,24 @@
 
 ## Что проверено, а что нет
 
-Все недели проверены настолько, насколько это возможно без Solana CLI:
-
 - **Неделя 2:** инструмент запускался против devnet RPC на реальных
   транзакциях; 9 unit-тестов на сохранённых копиях этих транзакций
-  (`backend/tests/fixtures/`). Все тесты бэкенда: 26/26.
+  (`backend/tests/fixtures/`).
 - **Неделя 3:** `cargo test` проходит (22 теста). Кросс-тест сверяет Rust с
   TypeScript на 210 векторах, включая ауры и MYTHIC: `dnaHash` совпадает
   байт-в-байт.
-- **Неделя 4:** логика программы протестирована на хосте (7 тестов):
-  signer / owner / writable, rent-exempt, повторная инициализация,
-  кулдаун, чужой владелец, раскладка байтов инструкций.
-- **Неделя 5:** обе Anchor-программы компилируются на Anchor 1.2 (`cargo check`)
-  и проходят IDL-сборку (`--features idl-build`, тот же шаг, что делает
-  `anchor build`). Эта сборка нашла ошибку: `#[constant]` с типом `usize`, она исправлена.
-  TS-клиент и тесты проходят `tsc` против сгенерированных из IDL типов.
-  Кодирование инструкций, аккаунта и событий проверено офлайн.
+- **Неделя 4:** 7 host-тестов логики, SBF-сборка (`pet_passport.so`, 69.5 КБ),
+  **деплой в Devnet** ([`2k6jZXKS…MNB2U`](https://explorer.solana.com/address/2k6jZXKSG5tHuksuMiiuvPYxK4av3WyTQMMidzmmNB2U?cluster=devnet))
+  и прогон клиента там: паспорт питомца создан, кормление записано,
+  повторное кормление отклонено программой (`FeedCooldown`).
+- **Неделя 5:** `anchor build`, **деплой в Devnet** `pet_counter`
+  ([`F2msfiA9…PEZ8P`](https://explorer.solana.com/address/F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P?cluster=devnet))
+  и `petnft`, **mocha-тесты 7/7 против Devnet** (и против локального
+  валидатора), клиент прошёл `init/inc/dec/list`, живой счётчик оставлен в сети.
 
-**Не сделано здесь**, потому что на машине разработки нет Solana CLI:
-SBF-сборка (`cargo build-sbf` / `anchor build`), деплой в Devnet и прогон
-`anchor test` на валидаторе. Точные команды — в файлах недель 4 и 5.
-Деплой делается с вашего кошелька и за ваши devnet SOL.
+Всё собрано и запущено на Windows без WSL, инструкция и найденные подвохи —
+в [windows-toolchain.md](windows-toolchain.md). Адреса и подписи транзакций —
+в файлах недель 4 и 5.
 
 ## Быстрый старт
 
@@ -44,9 +41,9 @@ cd backend && npm install && npm run tx:detect -- <signature> --logs
 # Неделя 3: Rust CLI
 cd crates/petdna && cargo test && cargo run --release -- sample --count 50000
 
-# Неделя 4: нативная программа (тесты на хосте, затем сборка и деплой, см. week-04)
-cd native/pet_passport && cargo test
+# Неделя 4: нативная программа (host-тесты, SBF-сборка; деплой — см. week-04)
+cd native/pet_passport && cargo test && cargo build-sbf
 
-# Неделя 5: Anchor (нужны Solana CLI + Anchor 1.2, см. week-05)
+# Неделя 5: Anchor (Linux/macOS/WSL; на Windows — windows-toolchain.md)
 npm install && anchor build && anchor test --provider.cluster localnet
 ```

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FC } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAuth } from "../context/AuthContext";
 import type { MarketplaceListing } from "../types/marketplace";
 import { PET_EMOJI, PET_TYPES, RARITIES, RARITY_COLOR } from "../types/pet";
 import { RarityBadge } from "../components/RarityBadge";
@@ -12,7 +12,7 @@ import { useToast } from "../context/ToastContext";
 import { SellPetModal } from "../components/SellPetModal";
 
 export const Marketplace: FC = () => {
-  const { connected, publicKey } = useWallet();
+  const { signedIn, wallet } = useAuth();
   const { refreshAll } = useGameData();
   const { showToast } = useToast();
 
@@ -22,7 +22,6 @@ export const Marketplace: FC = () => {
   const [sellOpen, setSellOpen] = useState(false);
   const [buying, setBuying] = useState<string | null>(null);
 
-  const wallet = publicKey?.toBase58();
 
   const load = async () => {
     setLoading(true);
@@ -57,7 +56,7 @@ export const Marketplace: FC = () => {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-2xl font-bold">Marketplace</h1>
-        {connected && <Button onClick={() => setSellOpen(true)}>+ List a Pet</Button>}
+        {signedIn && <Button onClick={() => setSellOpen(true)}>+ List a Pet</Button>}
       </div>
 
       <div className="glass rounded-2xl p-4 mb-6 grid sm:grid-cols-4 gap-3">
@@ -142,7 +141,8 @@ export const Marketplace: FC = () => {
               <Button
                 onClick={() => handleBuy(listing)}
                 loading={buying === listing.id}
-                disabled={!connected || wallet === listing.sellerWallet}
+                disabled={!signedIn || wallet === listing.sellerWallet}
+                title={signedIn ? undefined : "Sign in with Phantom to buy"}
               >
                 Buy
               </Button>

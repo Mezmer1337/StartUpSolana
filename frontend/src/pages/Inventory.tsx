@@ -1,22 +1,21 @@
 import { useState } from "react";
 import type { FC } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAuth } from "../context/AuthContext";
 import { useGameData } from "../context/GameDataContext";
+import { SignInPrompt } from "../components/AuthButton";
 import { useToast } from "../context/ToastContext";
 import { Button } from "../components/Button";
 import { extractErrorMessage, inventoryApi } from "../services/api";
 import { RarityBadge } from "../components/RarityBadge";
 
 export const Inventory: FC = () => {
-  const { connected } = useWallet();
+  const { signedIn } = useAuth();
   const { wallet, pets, inventory, refreshInventory, upsertPet } = useGameData();
   const { showToast } = useToast();
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [using, setUsing] = useState(false);
 
-  if (!connected) {
-    return <p className="text-gray-400 text-center py-20">Connect your wallet to view your inventory.</p>;
-  }
+  if (!signedIn) return <SignInPrompt action="view your inventory" />;
 
   const useOnPet = async (petId: string) => {
     if (!wallet || !selectedItem) return;

@@ -18,6 +18,7 @@ backend/prisma/migrations/**/migration_lock.toml.bak
 # Solana / Anchor / Rust build output (root workspace, crates/*, native/*)
 target/
 .anchor/
+.surfpool/
 test-ledger/
 *.log
 

@@ -39,6 +39,7 @@ const rpcUrl = clusterArg?.startsWith("http")
 const reportOptions: TxReportOptions = {
   cluster,
   treasuryWallet: process.env.TREASURY_WALLET,
+  passportProgramId: process.env.PET_PASSPORT_PROGRAM_ID,
   labels: Object.fromEntries(
     [
       [process.env.PROGRAM_ID, "PetNFT program (petnft)"],

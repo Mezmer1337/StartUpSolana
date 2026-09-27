@@ -206,3 +206,29 @@ model DailyRewardClaim {
   itemKeyAwarded String?
   claimedAt     DateTime @default(now())
 }
+
+// --- Sign In With Solana (see backend/src/services/authService.ts) ---------
+
+// One-time challenge the wallet signs to prove it controls the address.
+model AuthNonce {
+  nonce         String    @id
+  walletAddress String
+  message       String    // exact text the wallet must sign
+  expiresAt     DateTime
+  usedAt        DateTime? // set on first successful verify — a nonce is never accepted twice
+  createdAt     DateTime  @default(now())
+
+  @@index([walletAddress])
+}
+
+// A signed-in session. Only a sha256 of the bearer token is stored.
+model AuthSession {
+  id            String    @id @default(cuid())
+  tokenHash     String    @unique
+  walletAddress String
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([walletAddress])
+}

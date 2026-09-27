@@ -87,6 +87,36 @@ describe("txDetective — Metaplex NFT mint (createNft = CreateV1 + MintV1)", ()
   });
 });
 
+describe("txDetective — our own programs on devnet (weeks 4-5)", () => {
+  const PASSPORT = "2k6jZXKSG5tHuksuMiiuvPYxK4av3WyTQMMidzmmNB2U";
+  const COUNTER = "F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P";
+
+  it("decodes the native pet_passport CreatePassport instruction (no IDL)", () => {
+    const tx = fixture("tx-passport-create.json");
+    const report = buildTxReport(tx.transaction.signatures[0], tx, { passportProgramId: PASSPORT });
+
+    expect(report.instructions.map((i) => i.name)).toEqual(["createAccount", "CreatePassport"]);
+    const create = report.instructions[1];
+    expect(create.details).toEqual({
+      name: "Blaze",
+      dnaHash: "63126e9e4dd0904cb9e05739d990087a000e2d4d6039ab64925e442a203309ba",
+    });
+    expect(create.accounts.map((a) => a.role)).toEqual(["owner", "passport"]);
+    // The account System Program created in instruction 1 is the one our program filled in instruction 2.
+    expect(report.instructions[0].details.newAccount).toBe(create.accounts[1].address);
+    expect(report.instructions[0].details.owner).toBe(PASSPORT);
+  });
+
+  it("recognises the Anchor pet_counter instruction by its discriminator", () => {
+    const tx = fixture("tx-counter-increment.json");
+    const report = buildTxReport(tx.transaction.signatures[0], tx);
+
+    expect(report.instructions).toHaveLength(1);
+    expect(report.instructions[0]).toMatchObject({ programId: COUNTER, name: "increment" });
+    expect(report.logs).toContain("Program log: Instruction: Increment");
+  });
+});
+
 describe("base58Decode", () => {
   it("decodes addresses to 32 bytes, keeping leading zero bytes", () => {
     expect(base58Decode(SYSTEM_PROGRAM_ID)).toEqual(new Uint8Array(32));

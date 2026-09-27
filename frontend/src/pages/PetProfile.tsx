@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FC } from "react";
 import { useParams } from "react-router-dom";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAuth } from "../context/AuthContext";
 import { GROWTH_STAGE_LABEL, growthStageForLevel } from "../types/pet";
 import type { Pet, PetTraits } from "../types/pet";
 import { extractErrorMessage, petApi } from "../services/api";
@@ -30,7 +30,8 @@ const TRAIT_LABELS: Record<keyof PetTraits, string> = {
 
 export const PetProfile: FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { publicKey } = useWallet();
+  // Owner actions are only offered to the signed-in wallet.
+  const { wallet: signedInWallet } = useAuth();
   const { upsertPet, refreshAll, inventory } = useGameData();
   const { showToast } = useToast();
 
@@ -40,7 +41,7 @@ export const PetProfile: FC = () => {
   const [sellOpen, setSellOpen] = useState(false);
   const [equipping, setEquipping] = useState(false);
 
-  const wallet = publicKey?.toBase58();
+  const wallet = signedInWallet ?? undefined;
   const isOwner = !!wallet && pet?.ownerWallet === wallet;
 
   const load = async () => {

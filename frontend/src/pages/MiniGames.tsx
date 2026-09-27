@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { FC } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
 import { ReactionGame } from "../components/games/ReactionGame";
+import { SignInPrompt } from "../components/AuthButton";
+import { useAuth } from "../context/AuthContext";
 import { MemoryGame } from "../components/games/MemoryGame";
 import { useGameData } from "../context/GameDataContext";
 import { useToast } from "../context/ToastContext";
@@ -10,15 +11,13 @@ import { extractErrorMessage, gamesApi } from "../services/api";
 type GameKey = "REACTION" | "MEMORY";
 
 export const MiniGames: FC = () => {
-  const { connected } = useWallet();
+  const { signedIn } = useAuth();
   const { wallet, pets, refreshAll } = useGameData();
   const { showToast } = useToast();
   const [activeGame, setActiveGame] = useState<GameKey>("REACTION");
   const [petId, setPetId] = useState<string>("");
 
-  if (!connected) {
-    return <p className="text-gray-400 text-center py-20">Connect your wallet to play mini-games.</p>;
-  }
+  if (!signedIn) return <SignInPrompt action="play mini-games" />;
 
   const handleFinish = async (score: number) => {
     if (!wallet) return;
