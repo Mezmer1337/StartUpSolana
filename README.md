@@ -12,10 +12,11 @@ Marketplace.
 реально работает end-to-end, а что упрощено и почему — в разделе
 [MVP / заглушки](#mvp--заглушки).
 
-> **Курс Solana, недели 2–5.** Задания силлабуса выполнены на этом проекте:
+> **Курс Solana, недели 2–6.** Задания силлабуса выполнены на этом проекте:
 > Transaction Detective (неделя 2), Rust CLI `petdna` (3), нативная программа
-> `pet_passport` (4) и Anchor Counter `pet_counter` (5). Обзор и разборы —
-> в [docs/course](docs/course/README.md).
+> `pet_passport` (4), Anchor Counter `pet_counter` (5) и on-chain профиль
+> игрока на PDA `player_profile` (6). Обзор и разборы — в
+> [docs/course](docs/course/README.md).
 
 ## Содержание
 
@@ -89,9 +90,11 @@ Phantom Wallet  <──подписывает tx──>  Frontend (React)
   [Solana-программа](#solana-программа-anchor). Anchor 1.2, задеплоена в
   Devnet: `nDWNF4Za1PgtFxUBfvfuXf3A6AKrGyq6vu7jwWTRzfJ`.
 - **Программы курса (задеплоены в Devnet):** `programs/pet_counter` (Anchor,
-  счётчик ухода, `F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P`) и
+  счётчик ухода, `F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P`),
   `native/pet_passport` (без Anchor, on-chain паспорт с `dnaHash`,
-  `2k6jZXKSG5tHuksuMiiuvPYxK4av3WyTQMMidzmmNB2U`) — см.
+  `2k6jZXKSG5tHuksuMiiuvPYxK4av3WyTQMMidzmmNB2U`) и `programs/player_profile`
+  (on-chain профиль игрока на PDA, `CP6Fmq98dsLrpev7EjEVvuGQ1z2aG9H7vAuDiRPDnYkB`;
+  во фронтенде — блок **On-chain profile** на странице Profile) — см.
   [docs/course](docs/course/README.md).
 
 ## Генерация DNA и PRNG
@@ -319,9 +322,10 @@ petnft/  (этот репозиторий)
 │   └── tests/               dna/economy/color/leveling/txDetective — см. "Тесты"
 ├── programs/petnft/       Anchor-программа: реестр PetRecord
 ├── programs/pet_counter/  Anchor Counter Program (неделя 5)
+├── programs/player_profile/ On-chain профиль игрока на PDA (неделя 6)
 ├── native/pet_passport/   Нативная программа без Anchor (неделя 4)
 ├── crates/petdna/         Rust CLI: ДНК, цена в lamports, Borsh PetRecord (неделя 3)
-├── clients/               TS-клиенты для Devnet: pet-passport.ts, pet-counter.ts
+├── clients/               TS-клиенты для Devnet: pet-passport.ts, pet-counter.ts, player-profile.ts
 ├── tests/                 mocha-тесты Anchor-программ (anchor test)
 ├── docs/course/           Разборы недель 2–5 курса
 ├── shared/                 Константы только для справки (см. файл, почему)

@@ -9,10 +9,12 @@ skip-lint = false
 [programs.devnet]
 pet_counter = "F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P"
 petnft = "nDWNF4Za1PgtFxUBfvfuXf3A6AKrGyq6vu7jwWTRzfJ"
+player_profile = "CP6Fmq98dsLrpev7EjEVvuGQ1z2aG9H7vAuDiRPDnYkB"
 
 [programs.localnet]
 pet_counter = "F2msfiA9Ndo2s8gMRwykGSaEFbXVLtFHDhGMFRzPEZ8P"
 petnft = "nDWNF4Za1PgtFxUBfvfuXf3A6AKrGyq6vu7jwWTRzfJ"
+player_profile = "CP6Fmq98dsLrpev7EjEVvuGQ1z2aG9H7vAuDiRPDnYkB"
 
 [provider]
 cluster = "devnet"

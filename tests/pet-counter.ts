@@ -3,15 +3,10 @@ import { AnchorError, EventParser, Program } from "@anchor-lang/core";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { assert, expect } from "chai";
 import type { PetCounter } from "../target/types/pet_counter";
+import { testProvider } from "./utils";
 
 describe("pet_counter", () => {
-  // "confirmed" rather than the default "processed": the tests read back
-  // transaction logs (getTransaction needs >= confirmed) and it matches the client.
-  const env = anchor.AnchorProvider.env();
-  const provider = new anchor.AnchorProvider(env.connection, env.wallet, {
-    commitment: "confirmed",
-    preflightCommitment: "confirmed",
-  });
+  const provider = testProvider();
   anchor.setProvider(provider);
   const program = anchor.workspace.petCounter as Program<PetCounter>;
 

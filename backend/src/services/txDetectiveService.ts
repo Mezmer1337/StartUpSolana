@@ -102,7 +102,7 @@ const TOKEN_METADATA_INSTRUCTIONS: Record<number, { name: string; accounts?: str
 /**
  * Anchor instruction data starts with sha256("global:<snake_case_name>")[..8].
  * We can't know every program's instruction names, but we can recognise the
- * ones used in this repo (programs/petnft, programs/pet_counter).
+ * ones used in this repo (programs/petnft, pet_counter, player_profile).
  */
 const ANCHOR_INSTRUCTION_NAMES = [
   "initialize_pet_record",
@@ -112,6 +112,12 @@ const ANCHOR_INSTRUCTION_NAMES = [
   "decrement",
   "reset",
   "close_counter",
+  "create_profile",
+  "update_bio",
+  "change_username",
+  "set_featured_pet",
+  "clear_featured_pet",
+  "close_profile",
 ];
 const ANCHOR_DISCRIMINATORS = new Map(
   ANCHOR_INSTRUCTION_NAMES.map((name) => [

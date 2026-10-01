@@ -3,6 +3,7 @@ import type { FC } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useGameData } from "../context/GameDataContext";
 import { SignInPrompt } from "../components/AuthButton";
+import { OnchainProfileCard } from "../components/OnchainProfileCard";
 import { useWalletBalance } from "../hooks/useWalletBalance";
 import { Button } from "../components/Button";
 import { useToast } from "../context/ToastContext";
@@ -56,6 +57,8 @@ export const Profile: FC = () => {
           <Stat label="PetCoins" value={user?.petCoins ?? 0} />
         </div>
       </div>
+
+      <OnchainProfileCard />
 
       <div className="glass rounded-2xl p-6 flex items-center justify-between flex-wrap gap-4">
         <div>

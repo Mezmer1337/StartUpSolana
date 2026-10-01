@@ -57,6 +57,7 @@ surfpool start --offline --no-deploy --no-tui --no-studio --airdrop-keypair-path
 $u = "http://127.0.0.1:8899"
 solana program deploy target\deploy\pet_counter.so --program-id target\deploy\pet_counter-keypair.json --url $u --use-rpc
 solana program deploy target\deploy\petnft.so --program-id target\deploy\petnft-keypair.json --url $u --use-rpc
+solana program deploy target\deploy\player_profile.so --program-id target\deploy\player_profile-keypair.json --url $u --use-rpc
 solana program deploy native\pet_passport\target\deploy\pet_passport.so --program-id native\pet_passport\target\deploy\pet_passport-keypair.json --url $u --use-rpc
 
 # 4. Тесты Anchor — тот же скрипт, что в Anchor.toml

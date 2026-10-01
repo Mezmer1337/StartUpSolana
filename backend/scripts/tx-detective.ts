@@ -45,6 +45,7 @@ const reportOptions: TxReportOptions = {
       [process.env.PROGRAM_ID, "PetNFT program (petnft)"],
       [process.env.PET_PASSPORT_PROGRAM_ID, "PetNFT pet_passport (native)"],
       [process.env.PET_COUNTER_PROGRAM_ID, "PetNFT pet_counter (Anchor)"],
+      [process.env.PLAYER_PROFILE_PROGRAM_ID, "PetNFT player_profile (Anchor)"],
     ].filter(([address]) => address) as [string, string][]
   ),
 };

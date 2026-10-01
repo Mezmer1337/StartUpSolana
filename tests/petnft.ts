@@ -3,13 +3,10 @@ import { Program } from "@anchor-lang/core";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { expect } from "chai";
 import type { Petnft } from "../target/types/petnft";
+import { testProvider } from "./utils";
 
 describe("petnft", () => {
-  const env = anchor.AnchorProvider.env();
-  const provider = new anchor.AnchorProvider(env.connection, env.wallet, {
-    commitment: "confirmed",
-    preflightCommitment: "confirmed",
-  });
+  const provider = testProvider();
   anchor.setProvider(provider);
   const program = anchor.workspace.petnft as Program<Petnft>;
 

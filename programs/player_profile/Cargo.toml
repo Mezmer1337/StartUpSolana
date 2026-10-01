@@ -1,0 +1,28 @@
+[package]
+name = "player_profile"
+version = "0.1.0"
+description = "PetNFT on-chain player profile: PDAs and program architecture (course week 6)"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "player_profile"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "petnft/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = "1.2.0"
+# Only for petnft's account types (PetRecord) and program id — "cpi" turns
+# off its entrypoint so the two programs don't clash in one binary.
+petnft = { path = "../petnft", features = ["cpi"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
