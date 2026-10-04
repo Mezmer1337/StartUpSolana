@@ -12,10 +12,11 @@ Marketplace.
 реально работает end-to-end, а что упрощено и почему — в разделе
 [MVP / заглушки](#mvp--заглушки).
 
-> **Курс Solana, недели 2–6.** Задания силлабуса выполнены на этом проекте:
+> **Курс Solana, недели 2–7.** Задания силлабуса выполнены на этом проекте:
 > Transaction Detective (неделя 2), Rust CLI `petdna` (3), нативная программа
-> `pet_passport` (4), Anchor Counter `pet_counter` (5) и on-chain профиль
-> игрока на PDA `player_profile` (6). Обзор и разборы — в
+> `pet_passport` (4), Anchor Counter `pet_counter` (5), on-chain профиль
+> игрока на PDA `player_profile` (6) и токен PETCOIN на Token-2022 с
+> комиссией и метаданными в mint (7). Обзор и разборы — в
 > [docs/course](docs/course/README.md).
 
 ## Содержание
@@ -244,6 +245,11 @@ priceSol = clamp(
 без вывода в реальные деньги. Начисляется за ежедневную награду,
 мини-игры и квесты; тратится (в будущих версиях) на предметы/тренировки/
 косметику.
+
+On-chain версия PETCOIN — токен Token-2022 (`PET`, 6 знаков, комиссия 1% за
+перевод, метаданные прямо в mint) с клиентом `npm run petcoin` — см.
+[неделю 7](docs/course/week-07-spl-token.md). Игровой баланс в базе с ним
+пока не связан.
 
 **Мини-игры** (`GET /api/games`, `POST /api/games/:id/complete`):
 в этом MVP реализованы **2 из 4** предложенных в ТЗ игр — честно, без

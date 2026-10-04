@@ -26,3 +26,6 @@ test-ledger/
 .DS_Store
 .vscode/
 *.suo
+
+# PETCOIN mint addresses created by clients/petcoin.ts, per RPC endpoint
+clients/.petcoin-mints.json

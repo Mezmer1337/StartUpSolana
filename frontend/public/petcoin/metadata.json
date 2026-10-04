@@ -1,0 +1,7 @@
+{
+  "name": "PetCoin",
+  "symbol": "PET",
+  "description": "In-game currency of PetNFT: earned in mini-games and quests, spent on care items and in the marketplace. Devnet only, no real-money value.",
+  "image": "http://localhost:5173/petcoin/petcoin.svg",
+  "external_url": "http://localhost:5173"
+}

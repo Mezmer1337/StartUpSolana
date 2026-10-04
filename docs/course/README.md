@@ -1,6 +1,6 @@
-# Курс Solana: недели 2–6 на примере PetNFT
+# Курс Solana: недели 2–7 на примере PetNFT
 
-Задания недель 2–6 из силлабуса, выполненные на нашем проекте PetNFT, а не
+Задания недель 2–7 из силлабуса, выполненные на нашем проекте PetNFT, а не
 на абстрактных примерах. Каждая неделя — рабочий код в репозитории плюс
 разбор в отдельном файле.
 
@@ -11,6 +11,7 @@
 | 4 | Первая Solana Program | Создать и задеплоить первую программу в Devnet | Нативная программа `pet_passport` без Anchor: записывает `dnaHash` питомца в блокчейн без возможности перезаписи и ведёт счётчик кормлений с кулдауном по `Clock`. Клиент для Devnet | [week-04](week-04-native-program.md), `native/pet_passport/`, `clients/pet-passport.ts` |
 | 5 | Anchor Framework | Counter Program и взаимодействие через client | Anchor-программа `pet_counter`: счётчик ухода за питомцем (PDA на пару владелец + питомец), события, ошибки, закрытие аккаунта; TS-клиент и mocha-тесты. Заодно `programs/petnft` переведён на Anchor 1.2 | [week-05](week-05-anchor-counter.md), `programs/pet_counter/`, `clients/pet-counter.ts`, `tests/` |
 | 6 | Accounts, PDAs и архитектура программ | Децентрализованный on-chain профиль с PDA | Программа `player_profile`: профиль в PDA `["profile", wallet]`, уникальные ники через PDA `["username", ник]`, закреплённый питомец — проверенный `PetRecord` программы `petnft`. Клиент, блок **On-chain profile** в интерфейсе, карта аккаунтов всего проекта | [week-06](week-06-pda-profile.md), `programs/player_profile/`, `clients/player-profile.ts`, `frontend/src/components/OnchainProfileCard.tsx` |
+| 7 | SPL Tokens и Token Extensions | Собственный токен: выпуск, transfer, metadata и взаимодействие через client | Внутриигровая валюта **PETCOIN (`PET`)** на Token-2022: комиссия 1% за перевод (TransferFeeConfig, сбор удержанного в казну), имя/символ/uri и свои поля прямо в mint (MetadataPointer + TokenMetadata). CLI: create/mint/transfer/meta/holders/collect-fees/burn | [week-07](week-07-spl-token.md), `clients/petcoin-core.ts`, `clients/petcoin.ts`, `tests/petcoin.ts` |
 
 ## Что проверено, а что нет
 
@@ -33,6 +34,9 @@
   10 новых тестов — все **17/17 против Devnet** и локально. Демо-профиль
   `@petnft_demo` с закреплённым питомцем из `petnft`; профиль `@ui_test_pet`
   создан и отредактирован прямо из интерфейса PetNFT.
+- **Неделя 7:** PETCOIN **выпущен в Devnet**
+  ([`E3tAx6RP…KunA`](https://explorer.solana.com/address/E3tAx6RP3T83PcQ5FRfxhtpdVo26icMTpeCMqwt7KunA?cluster=devnet)),
+  виден в Phantom; **12/12 тестов против Devnet** и локально.
 
 Всё собрано и запущено на Windows без WSL, инструкция и найденные подвохи —
 в [windows-toolchain.md](windows-toolchain.md). Адреса и подписи транзакций —
@@ -52,4 +56,7 @@ cd native/pet_passport && cargo test && cargo build-sbf
 
 # Неделя 5: Anchor (Linux/macOS/WSL; на Windows — windows-toolchain.md)
 npm install && anchor build && anchor test --provider.cluster localnet
+
+# Неделя 7: токен PETCOIN (Token-2022), сборка не нужна
+npm run petcoin -- create && npm run petcoin -- mint --amount 1000 && npm run test:petcoin
 ```
