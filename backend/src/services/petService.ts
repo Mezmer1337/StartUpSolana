@@ -1,4 +1,4 @@
-import { Pet } from "@prisma/client";
+import { Pet, Prisma } from "@prisma/client";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { prisma } from "../db";
 import { ApiError } from "../middleware/errorHandler";
@@ -7,23 +7,30 @@ import { assertMintAllowed } from "./antiAbuseService";
 import { getCurrentMintPrice } from "./economyService";
 import { generateUniquePetDna } from "./dnaService";
 import { getTreasuryWallet, verifyAndConsumeMintPayment } from "./solanaVerifyService";
-import { RARITY_MULTIPLIER, RarityKey } from "../constants/dna";
-import { COOLDOWNS_MS, MAX_STAT, PET_BASE_STATS, PetTypeKey, levelFromXp, xpForLevel } from "../constants/petData";
+import { Archetype, RARITY_MULTIPLIER, RarityKey } from "../constants/dna";
+import {
+  ARCHETYPE_BASE_STATS,
+  COOLDOWNS_MS,
+  MAX_PET_NAME_LENGTH,
+  MAX_STAT,
+  defaultPetName,
+  levelFromXp,
+  xpForLevel,
+} from "../constants/petData";
 
 const clamp = (value: number, min = 0, max = MAX_STAT) => Math.max(min, Math.min(max, value));
 
 /** Allowed slippage between the quoted mint price and what was actually paid on-chain. */
 const PRICE_SLIPPAGE_TOLERANCE = 0.05;
 
-async function logAction(walletAddress: string, action: string) {
+export async function logAction(walletAddress: string, action: string) {
   await prisma.actionLog.create({ data: { walletAddress, action } });
 }
 
 export interface MintPetInput {
   ownerWallet: string;
-  name: string;
-  type: PetTypeKey;
-  color?: string;
+  /** Optional — a hatched pet gets a generated name and can be renamed later. */
+  name?: string;
   /** Signature of the wallet's SOL transfer to the treasury, paying for this mint. */
   paymentTxSignature: string;
 }
@@ -34,6 +41,10 @@ export interface MintPetResult {
 }
 
 /**
+ * Buys and hatches an egg — the only way to get a pet. The player picks
+ * nothing about the creature: archetype, parts, colours and rarity all
+ * come from DNA rolled server-side at hatch time.
+ *
  * The real "create a pet" entry point (brief: "создание питомца происходит
  * за определённое количество SOL"). Every critical check happens here, not
  * on the frontend:
@@ -58,31 +69,44 @@ export async function mintPet(input: MintPetInput): Promise<MintPetResult> {
   // doesn't pay the treasury enough, or has already been used.
   await verifyAndConsumeMintPayment(input.paymentTxSignature, input.ownerWallet, minLamports);
 
-  const dna = await generateUniquePetDna(input.ownerWallet, input.name);
+  // The payment is already consumed at this point, so a unique-constraint
+  // race (two concurrent hatches rolling the same look) re-rolls instead
+  // of failing the purchase.
+  let pet: Pet | null = null;
+  for (let attempt = 0; attempt < 3 && !pet; attempt++) {
+    const dna = await generateUniquePetDna(input.ownerWallet, input.name ?? "");
+    const base = ARCHETYPE_BASE_STATS[dna.archetype as Archetype];
+    const mult = RARITY_MULTIPLIER[dna.rarity as RarityKey];
+    const name = input.name?.trim().slice(0, MAX_PET_NAME_LENGTH) || defaultPetName(dna.seedHash);
 
-  const base = PET_BASE_STATS[input.type];
-  const mult = RARITY_MULTIPLIER[dna.rarity as RarityKey];
-
-  const pet = await prisma.pet.create({
-    data: {
-      ownerWallet: input.ownerWallet,
-      name: input.name.trim().slice(0, 32),
-      type: input.type,
-      color: input.color ?? dna.palette.primary,
-      rarity: dna.rarity,
-      seedHash: dna.seedHash,
-      dnaHash: dna.dnaHash,
-      archetype: dna.archetype,
-      traits: JSON.stringify(dna.traits),
-      bodyParams: JSON.stringify(dna.bodyParams),
-      palette: JSON.stringify(dna.palette),
-      traitScore: dna.traitScore,
-      auraType: dna.auraType,
-      strength: Math.round(base.strength * mult),
-      speed: Math.round(base.speed * mult),
-      luck: Math.round(base.luck * mult),
-    },
-  });
+    try {
+      pet = await prisma.pet.create({
+        data: {
+          ownerWallet: input.ownerWallet,
+          name,
+          type: dna.archetype,
+          color: dna.palette.primary,
+          rarity: dna.rarity,
+          seedHash: dna.seedHash,
+          dnaHash: dna.dnaHash,
+          look: JSON.stringify(dna.look),
+          visualKey: dna.visualKey,
+          archetype: dna.archetype,
+          traits: JSON.stringify(dna.traits),
+          bodyParams: JSON.stringify(dna.bodyParams),
+          palette: JSON.stringify(dna.palette),
+          traitScore: dna.traitScore,
+          auraType: dna.auraType,
+          strength: Math.round(base.strength * mult),
+          speed: Math.round(base.speed * mult),
+          luck: Math.round(base.luck * mult),
+        },
+      });
+    } catch (err) {
+      if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002")) throw err;
+    }
+  }
+  if (!pet) throw new ApiError(500, "Failed to hatch a unique pet — please contact support with your payment signature");
 
   await prisma.transaction.create({
     data: {
@@ -94,6 +118,13 @@ export async function mintPet(input: MintPetInput): Promise<MintPetResult> {
   });
 
   return { pet, pricePaidSol: quote.priceSol };
+}
+
+export async function renamePet(pet: Pet, wallet: string, name: string): Promise<Pet> {
+  assertOwnership(pet, wallet);
+  const trimmed = name.trim().slice(0, MAX_PET_NAME_LENGTH);
+  if (!trimmed) throw new ApiError(400, "Name is required");
+  return prisma.pet.update({ where: { id: pet.id }, data: { name: trimmed } });
 }
 
 export async function getPetsForWallet(ownerWallet: string) {
@@ -121,14 +152,14 @@ function checkCooldown(last: Date | null, cooldownMs: number, label: string) {
   }
 }
 
-interface XpResult {
+export interface XpResult {
   pet: Pet;
   leveledUp: boolean;
   newLevel?: number;
 }
 
 /** Applies XP gain to a pet, handling multi-level level-ups and stat growth. */
-async function applyXpAndSave(pet: Pet, data: Partial<Pet>, xpGain: number): Promise<XpResult> {
+export async function applyXpAndSave(pet: Pet, data: Partial<Pet>, xpGain: number): Promise<XpResult> {
   const newXp = pet.xp + xpGain;
   const startLevel = pet.level;
   const newLevel = levelFromXp(newXp);
@@ -138,9 +169,10 @@ async function applyXpAndSave(pet: Pet, data: Partial<Pet>, xpGain: number): Pro
 
   if (leveledUp) {
     const levelsGained = newLevel - startLevel;
-    // Each level grants a small, deterministic stat boost and a full refill.
-    updateData.strength = pet.strength + levelsGained * 2;
-    updateData.speed = pet.speed + levelsGained * 2;
+    // Each level grants a small, deterministic stat boost and a full refill —
+    // on top of any stat gain already in `data` (e.g. from training).
+    updateData.strength = (updateData.strength ?? pet.strength) + levelsGained * 2;
+    updateData.speed = (updateData.speed ?? pet.speed) + levelsGained * 2;
     updateData.health = MAX_STAT;
     updateData.energy = MAX_STAT;
   }

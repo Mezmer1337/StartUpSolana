@@ -29,3 +29,9 @@ test-ledger/
 
 # PETCOIN mint addresses created by clients/petcoin.ts, per RPC endpoint
 clients/.petcoin-mints.json
+
+# npm run art:gallery output
+art-gallery.html
+
+# Pitch video build output (large; rebuild with `npm run build` in pitch/)
+pitch/out/

@@ -1,7 +1,8 @@
 {
   "_readme": "Reference-only constants shared conceptually between backend and frontend. Because backend/ and frontend/ are independent npm packages (see README 'Project structure' for why), this file is NOT imported directly by either build — it documents the values that backend/src/constants/*.ts and frontend/src/types/*.ts must be kept in sync with. If you change one, change the other and update this file too.",
 
-  "petTypes": ["CAT", "DOG", "FOX", "DRAGON"],
+  "archetypes": ["ROUND", "QUADRUPED", "HUMANOID", "BIRD", "AQUATIC"],
+  "_petTypesNote": "Species (CAT/DOG/FOX/DRAGON) is no longer chosen — pets hatch from eggs; see shared/petArt and docs/art-guide.md",
   "rarities": ["COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"],
   "itemCategories": ["FOOD", "TOY", "POTION", "TRAINING", "COSMETIC"],
 

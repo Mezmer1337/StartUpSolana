@@ -1,0 +1,340 @@
+{
+  "_readme": "Edit the text/timings here, then run `npm run build` in pitch/. Footage: ss = start (s) in the recording. Scenes with `voice` last as long as their voice line (+ short pauses); others use `dur` / clip `t`.",
+  "output": "out/petnft-pitch.mp4",
+  "videos": "C:/Users/Asus/Videos/Записи экрана",
+  "links": {
+    "app": "petnft-production.up.railway.app",
+    "github": "github.com/Mezmer1337/StartUpSolana"
+  },
+  "team": [
+    {
+      "name": "Ayan Yesirkep",
+      "role": "Idea author · Product",
+      "avatar": "assets/pets/team-ayan.svg"
+    },
+    {
+      "name": "Bexultan Koshantayev",
+      "role": "Lead developer · Solana",
+      "avatar": "assets/pets/team-0.svg"
+    },
+    {
+      "name": "Aibek Konysbayev",
+      "role": "Developer",
+      "avatar": "assets/pets/team-aibek.svg"
+    },
+    {
+      "name": "Arina Baidukova",
+      "role": "Artist · Creature design",
+      "avatar": "assets/pets/team-1.svg"
+    },
+    {
+      "name": "Miras Alpyspaev",
+      "role": "UX researcher",
+      "avatar": "assets/pets/team-miras.svg"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "01-hook",
+      "layout": "footage",
+      "kicker": "PetNFT · Solana",
+      "title": "Every egg hatches a creature that has never existed before.",
+      "bullets": [],
+      "clip": {
+        "file": "Запись экрана 2026-10-08 143543.mp4",
+        "ss": 5.5,
+        "t": 9
+      },
+      "voice": {
+        "file": "audio_2026-10-08_18-15-08.ogg",
+        "from": 1.66,
+        "to": 7.56
+      }
+    },
+    {
+      "id": "02-problem",
+      "layout": "problem",
+      "dur": 15,
+      "kicker": "The problem",
+      "title": "NFT pets are 10,000 copies of the same picture.",
+      "bullets": [
+        "Static JPEGs with a few swapped traits — nothing to raise, nothing to bond with",
+        "GameFi feels like a job: grind, farm, dump",
+        "\"Ownership\" is a token ID you never look at"
+      ],
+      "voice": {
+        "file": "audio_2026-10-08_18-15-08.ogg",
+        "from": 10.06,
+        "to": 22.43
+      }
+    },
+    {
+      "id": "03-solution",
+      "layout": "footage",
+      "kicker": "The solution",
+      "title": "A Tamagotchi that lives on Solana — and is truly yours.",
+      "bullets": [
+        "Buy a mystery egg — no picking traits, ever",
+        "Hand-drawn parts × palettes × eye colours: 22 trillion looks",
+        "Every look is unique — enforced, not just likely",
+        "Rarity you can see: Common → Mythic, elemental auras"
+      ],
+      "clip": {
+        "file": "Запись экрана 2026-10-08 144844.mp4",
+        "ss": 2,
+        "t": 19
+      },
+      "voice": {
+        "file": "audio_2026-10-08_18-15-08.ogg",
+        "from": 24.78,
+        "to": 42.85
+      }
+    },
+    {
+      "id": "04-play-snake",
+      "layout": "footage",
+      "kicker": "Play to grow",
+      "title": "Your pet plays — and gets stronger.",
+      "bullets": [
+        "Solana Snake: your pet is the snake's head",
+        "Every run trains Strength, XP and levels"
+      ],
+      "clip": {
+        "file": "Запись экрана 2026-10-08 145253.mp4",
+        "ss": 0.5,
+        "t": 9
+      },
+      "voice": {
+        "file": "audio_2026-10-08_18-15-16.ogg",
+        "from": 2.13,
+        "to": 8.91
+      }
+    },
+    {
+      "id": "05-play-catcher",
+      "layout": "footage",
+      "kicker": "Play to grow",
+      "title": "Strength pays off inside the games.",
+      "bullets": [
+        "Sol Catcher: coins +10, rare SOL +50",
+        "Higher Strength = extra lives and shields",
+        "Server-checked scores — no fake records"
+      ],
+      "clip": {
+        "file": "Запись экрана 2026-10-08 145923.mp4",
+        "ss": 66,
+        "t": 10
+      },
+      "voice": {
+        "file": "audio_2026-10-08_18-15-16.ogg",
+        "from": 18.22,
+        "to": 26.39
+      }
+    },
+    {
+      "id": "06-play-runner",
+      "layout": "footage",
+      "kicker": "Play to grow",
+      "title": "Built mobile-first.",
+      "bullets": [
+        "Block Runner: your pet runs, you dodge",
+        "Touch controls, works in any phone browser"
+      ],
+      "clip": {
+        "file": "Запись экрана 2026-10-08 145923.mp4",
+        "ss": 117,
+        "t": 10
+      },
+      "voice": {
+        "file": "audio_2026-10-08_18-15-16.ogg",
+        "from": 28.99,
+        "to": 34.12
+      }
+    },
+    {
+      "id": "07-market",
+      "layout": "footage",
+      "kicker": "Real economy",
+      "title": "Trade pets for real SOL.",
+      "bullets": [
+        "One Phantom transaction: 95% straight to the seller, 5% fee",
+        "The backend verifies every payment on-chain before the pet moves"
+      ],
+      "clip": {
+        "file": "Запись экрана 2026-10-08 145923.mp4",
+        "ss": 176,
+        "t": 11
+      },
+      "voice": {
+        "file": "audio_2026-10-08_18-15-20.ogg",
+        "from": 0.93,
+        "to": 11.37
+      }
+    },
+    {
+      "id": "08-shop",
+      "layout": "image",
+      "dur": 9,
+      "kicker": "Real economy",
+      "title": "Mystic items change how your pet looks.",
+      "bullets": [
+        "Horn Elixir · Tail Charm · Aura Crystal — SOL only",
+        "Training items for PetCoins earned in games and quests"
+      ],
+      "image": {
+        "file": "assets/shop.png",
+        "crop": [
+          0,
+          90,
+          1100,
+          760
+        ]
+      },
+      "voice": {
+        "file": "audio_2026-10-08_18-15-20.ogg",
+        "from": 12.17,
+        "to": 19.07
+      }
+    },
+    {
+      "id": "09-why-solana",
+      "layout": "solana",
+      "dur": 16,
+      "kicker": "Why Solana",
+      "title": "Fast and cheap enough for a pet you check on every day.",
+      "bullets": [
+        "Sign in with Phantom (SIWS) — no passwords, no seed phrases",
+        "Sub-second SOL payments, verified on-chain by our backend",
+        "Pets mint as Metaplex NFTs; PETCOIN on Token-2022",
+        "Anchor & native programs on devnet: player profile PDA, pet passport"
+      ],
+      "voice": {
+        "file": "audio_2026-10-08_18-15-23.ogg",
+        "from": 2.39,
+        "to": 15.77
+      }
+    },
+    {
+      "id": "10-art",
+      "layout": "footage",
+      "kicker": "Real art",
+      "title": "Drawn by a real artist — not AI, not empty generation.",
+      "bullets": [
+        "Every horn, ear and eye is hand-drawn in Inkscape by our artist",
+        "No AI images, no stock assets — real craft in every pet",
+        "Her new parts go live in minutes and multiply the possible pets"
+      ],
+      "clip": {
+        "file": "Запись экрана 2026-10-08 151201.mp4",
+        "ss": 27,
+        "t": 15,
+        "crop": [
+          820,
+          700,
+          10,
+          110
+        ]
+      },
+      "voice": {
+        "file": "audio_2026-10-08_18-15-27.ogg",
+        "from": 1.3,
+        "to": 14.19
+      }
+    },
+    {
+      "id": "11-business",
+      "layout": "cards",
+      "dur": 14,
+      "kicker": "Business model",
+      "title": "Revenue grows with every hatch and every trade.",
+      "cards": [
+        {
+          "icon": "🥚",
+          "title": "Egg sales",
+          "text": "Dynamic price that rises with demand"
+        },
+        {
+          "icon": "🛒",
+          "title": "5% marketplace fee",
+          "text": "On every pet trade, paid on-chain"
+        },
+        {
+          "icon": "🔮",
+          "title": "Mystic items",
+          "text": "SOL-only cosmetics: horns, tails, auras"
+        },
+        {
+          "icon": "🎨",
+          "title": "Art drops",
+          "text": "Seasonal part packs and limited auras"
+        }
+      ],
+      "voice": {
+        "file": "audio_2026-10-08_18-15-30.ogg",
+        "from": 1.41,
+        "to": 12.39
+      }
+    },
+    {
+      "id": "12-roadmap",
+      "layout": "roadmap",
+      "dur": 15,
+      "kicker": "Where we are",
+      "title": "Live MVP on Solana devnet — try it today.",
+      "status": [
+        "11 pets hatched",
+        "Real SOL trades",
+        "57 automated tests"
+      ],
+      "roadmap": [
+        {
+          "when": "Next",
+          "what": "PvP pet battles · breeding (two pets → a new egg)"
+        },
+        {
+          "when": "Then",
+          "what": "Mainnet beta · NFT transfer on sale"
+        },
+        {
+          "when": "Later",
+          "what": "Telegram mini app · artist creator program"
+        }
+      ],
+      "voice": {
+        "file": "audio_2026-10-08_18-15-34.ogg",
+        "from": 1.14,
+        "to": 15.52
+      }
+    },
+    {
+      "id": "13-team",
+      "layout": "team",
+      "dur": 14,
+      "kicker": "Team",
+      "title": "Five people, one pet.",
+      "voice": {
+        "file": "audio_2026-10-08_18-15-38.ogg",
+        "from": 0.79,
+        "to": 7.5
+      }
+    },
+    {
+      "id": "14-cta",
+      "layout": "cta",
+      "dur": 7,
+      "kicker": "PetNFT",
+      "title": "Raise it. Train it. Own it."
+    }
+  ],
+  "voiceDir": "C:/Users/Asus/Desktop/аудио",
+  "contacts": [
+    {
+      "label": "Developer",
+      "email": "prostobekosa@bk.ru"
+    },
+    {
+      "label": "Artist",
+      "email": "abochkafan@gmail.com"
+    }
+  ]
+}

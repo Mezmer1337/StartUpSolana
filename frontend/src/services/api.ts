@@ -1,5 +1,18 @@
 import axios from "axios";
-import type { Pet, PetActionResult, PetType } from "../types/pet";
+import type { Pet, PetActionResult } from "../types/pet";
+import type { Medal, TrainableStat, TrainingGameKey } from "../../../shared/game/training";
+
+export interface TrainingResult extends PetActionResult {
+  reward: { score: number; medal: Medal; xp: number; statGain: number; coins: number; stat: TrainableStat };
+  progress: {
+    levelBefore: number;
+    xpBefore: number;
+    levelAfter: number;
+    xpAfter: number;
+    levelStartXp: number;
+    nextLevelXp: number;
+  };
+}
 import type { InventoryEntry, ItemDefinition } from "../types/item";
 import type { MarketplaceListing } from "../types/marketplace";
 import type { LeaderboardEntry, UserProfile } from "../types/user";
@@ -55,11 +68,11 @@ export interface MintPetResult {
 }
 
 export const petApi = {
-  // Rarity/DNA/traits are intentionally not part of this input — they're
-  // generated server-side (see backend petService.mintPet) so none of it
-  // can be forged. paymentTxSignature must be a confirmed on-chain SOL
+  // Buys + hatches an egg. Look/rarity/DNA are intentionally
+  // not part of this input — they're generated server-side (see backend
+  // petService.mintPet) so none of it can be forged or chosen. paymentTxSignature must be a confirmed on-chain SOL
   // transfer to the treasury wallet paying at least the current mint price.
-  mint: (input: { ownerWallet: string; name: string; type: PetType; color?: string; paymentTxSignature: string }) =>
+  mint: (input: { ownerWallet: string; name?: string; paymentTxSignature: string }) =>
     api.post<MintPetResult>("/pets/mint", input).then((r) => r.data),
 
   getByWallet: (wallet: string) => api.get<Pet[]>(`/pets/wallet/${wallet}`).then((r) => r.data),
@@ -78,6 +91,20 @@ export const petApi = {
   train: (id: string, ownerWallet: string, stat: "strength" | "speed") =>
     api.post<PetActionResult>(`/pets/${id}/train`, { ownerWallet, stat }).then((r) => r.data),
 
+  startTraining: (id: string, ownerWallet: string, game: TrainingGameKey) =>
+    api
+      .post<{ session: { id: string; game: TrainingGameKey; startedAt: string }; pet: Pet }>(`/pets/${id}/training/start`, {
+        ownerWallet,
+        game,
+      })
+      .then((r) => r.data),
+
+  finishTraining: (id: string, sessionId: string, ownerWallet: string, score: number) =>
+    api.post<TrainingResult>(`/pets/${id}/training/${sessionId}/finish`, { ownerWallet, score }).then((r) => r.data),
+
+  rename: (id: string, ownerWallet: string, name: string) =>
+    api.post<Pet>(`/pets/${id}/rename`, { ownerWallet, name }).then((r) => r.data),
+
   equip: (id: string, ownerWallet: string, itemKey: string | null) =>
     api.post<Pet>(`/pets/${id}/equip`, { ownerWallet, itemKey }).then((r) => r.data),
 
@@ -88,8 +115,21 @@ export const petApi = {
 export const inventoryApi = {
   get: (wallet: string) => api.get<InventoryEntry[]>(`/inventory/${wallet}`).then((r) => r.data),
 
+  /** Returns the updated pet plus a human-readable `effect` ("Goku grew horns #2!"). */
   use: (ownerWallet: string, petId: string, itemKey: string) =>
-    api.post<Pet>("/inventory/use", { ownerWallet, petId, itemKey }).then((r) => r.data),
+    api.post<Pet & { effect?: string }>("/inventory/use", { ownerWallet, petId, itemKey }).then((r) => r.data),
+};
+
+export interface ShopItem extends ItemDefinition {
+  /** null = not sold for that currency (Mystic items are SOL-only). */
+  price: { petCoins: number | null; sol: number | null };
+}
+
+export const shopApi = {
+  get: () => api.get<{ treasuryWallet: string; items: ShopItem[] }>("/shop").then((r) => r.data),
+  /** SOL purchases pass the signature of the on-chain transfer to the treasury; the backend verifies it on devnet. */
+  buy: (wallet: string, itemKey: string, quantity: number, currency: "PETCOIN" | "SOL", txSignature?: string) =>
+    api.post<{ petCoins: number }>("/shop/buy", { wallet, itemKey, quantity, currency, txSignature }).then((r) => r.data),
 };
 
 export const itemApi = {
@@ -111,27 +151,6 @@ export const economyApi = {
   getMintPrice: () => api.get<MintPriceQuote>("/economy/mint-price").then((r) => r.data),
 };
 
-export interface GameDefinition {
-  key: string;
-  name: string;
-  description: string;
-  maxScore: number;
-}
-
-export interface GameCompleteResult {
-  score: number;
-  xpAwarded: number;
-  coinsAwarded: number;
-  accountLeveledUp: boolean;
-  pet: PetActionResult | null;
-}
-
-export const gamesApi = {
-  list: () => api.get<GameDefinition[]>("/games").then((r) => r.data),
-  complete: (gameKey: string, wallet: string, score: number, petId?: string) =>
-    api.post<GameCompleteResult>(`/games/${gameKey}/complete`, { wallet, score, petId }).then((r) => r.data),
-};
-
 export interface QuestEntry {
   key: string;
   name: string;
@@ -151,7 +170,6 @@ export const questsApi = {
 };
 
 export interface MarketplaceFilters {
-  type?: string;
   rarity?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -168,7 +186,19 @@ export const marketplaceApi = {
   cancel: (sellerWallet: string, listingId: string) =>
     api.post(`/marketplace/${listingId}/cancel`, { sellerWallet }).then((r) => r.data),
 
-  buy: (buyerWallet: string, listingId: string, txSignature?: string) =>
+  /** Step 1: hold the listing for a few minutes and get the exact transfers to sign. */
+  reserve: (buyerWallet: string, listingId: string) =>
+    api
+      .post<{
+        listingId: string;
+        reservedUntil: string;
+        payment: { totalLamports: number; transfers: { to: string; lamports: number; label: string }[] };
+        breakdown: { priceSol: number; platformFeeSol: number; royaltySol: number; sellerProceedsSol: number };
+      }>(`/marketplace/${listingId}/reserve`, { buyerWallet })
+      .then((r) => r.data),
+
+  /** Step 2: hand in the on-chain payment signature; the backend verifies it on devnet. */
+  buy: (buyerWallet: string, listingId: string, txSignature: string) =>
     api.post("/marketplace/buy", { buyerWallet, listingId, txSignature }).then((r) => r.data),
 };
 

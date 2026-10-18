@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import type { FC } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useGameData } from "../context/GameDataContext";
@@ -17,14 +18,14 @@ export const Inventory: FC = () => {
 
   if (!signedIn) return <SignInPrompt action="view your inventory" />;
 
-  const useOnPet = async (petId: string) => {
+  const applyToPet = async (petId: string) => {
     if (!wallet || !selectedItem) return;
     setUsing(true);
     try {
       const pet = await inventoryApi.use(wallet, petId, selectedItem);
       upsertPet(pet);
       await refreshInventory();
-      showToast(`Used item on ${pet.name}`, "success");
+      showToast(pet.effect ?? `Used item on ${pet.name}`, "success");
       setSelectedItem(null);
     } catch (err) {
       showToast(extractErrorMessage(err), "error");
@@ -35,11 +36,16 @@ export const Inventory: FC = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-8">Inventory</h1>
+      <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
+        <h1 className="text-2xl font-bold">Inventory</h1>
+        <Link to="/shop">
+          <Button>🏪 Shop</Button>
+        </Link>
+      </div>
 
       {inventory.length === 0 && (
         <div className="glass rounded-2xl p-12 text-center text-gray-400">
-          Your inventory is empty. Claim your Daily Reward from the Profile page to get items!
+          Your inventory is empty. Buy items in the <Link to="/shop" className="text-purple-300 underline">Shop</Link> or claim your Daily Reward on the Profile page!
         </div>
       )}
 
@@ -74,7 +80,7 @@ export const Inventory: FC = () => {
               {pets.map((pet) => (
                 <button
                   key={pet.id}
-                  onClick={() => useOnPet(pet.id)}
+                  onClick={() => applyToPet(pet.id)}
                   disabled={using}
                   className="flex items-center justify-between rounded-xl bg-white/5 hover:bg-white/10 px-4 py-2 text-sm text-left disabled:opacity-40"
                 >

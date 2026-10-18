@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import type { FC } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { GROWTH_STAGE_LABEL, growthStageForLevel } from "../types/pet";
-import type { Pet, PetTraits } from "../types/pet";
+import type { Pet } from "../types/pet";
+import { describeLook, lookFromRecord } from "../../../shared/petArt";
+import type { PetMood } from "../../../shared/petArt";
+import { TRAINING_GAMES } from "../../../shared/game/training";
+import type { TrainingGameKey } from "../../../shared/game/training";
+import { TrainingModal } from "../components/training/TrainingModal";
 import { extractErrorMessage, petApi } from "../services/api";
-import { RarityBadge } from "../components/RarityBadge";
+import { RarityBadge, RarityFrame } from "../components/RarityBadge";
 import { StatBar } from "../components/StatBar";
 import { Button } from "../components/Button";
 import { PetViewer } from "../components/PetViewer";
@@ -14,19 +19,10 @@ import { useToast } from "../context/ToastContext";
 import { MintNftPanel } from "../components/MintNftPanel";
 import { SellPetModal } from "../components/SellPetModal";
 
-type ActionKey = "feed" | "play" | "rest" | "trainStrength" | "trainSpeed";
+type ActionKey = "feed" | "rest";
 
-const TRAIT_LABELS: Record<keyof PetTraits, string> = {
-  ears: "Ears",
-  eyes: "Eyes",
-  mouth: "Mouth",
-  tail: "Tail",
-  legs: "Legs",
-  wings: "Wings",
-  fins: "Fins",
-  special: "Special",
-  pattern: "Pattern",
-};
+/** How the pet reacts on screen right after an action. */
+const ACTION_MOOD: Record<ActionKey, PetMood> = { feed: "happy", rest: "sleep" };
 
 export const PetProfile: FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,12 +30,22 @@ export const PetProfile: FC = () => {
   const { wallet: signedInWallet } = useAuth();
   const { upsertPet, refreshAll, inventory } = useGameData();
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   const [pet, setPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<ActionKey | null>(null);
   const [sellOpen, setSellOpen] = useState(false);
   const [equipping, setEquipping] = useState(false);
+  const [training, setTraining] = useState<TrainingGameKey | null>(null);
+  const [mood, setMood] = useState<PetMood | undefined>(undefined);
+
+  // A reaction mood (happy/sleep) lasts a few seconds, then back to default.
+  useEffect(() => {
+    if (!mood) return;
+    const t = setTimeout(() => setMood(undefined), 3500);
+    return () => clearTimeout(t);
+  }, [mood]);
 
   const wallet = signedInWallet ?? undefined;
   const isOwner = !!wallet && pet?.ownerWallet === wallet;
@@ -68,15 +74,14 @@ export const PetProfile: FC = () => {
     try {
       let result;
       if (key === "feed") result = await petApi.feed(id, wallet);
-      else if (key === "play") result = await petApi.play(id, wallet);
-      else if (key === "rest") {
+      else {
         const r = await petApi.rest(id, wallet);
         result = { pet: r.pet, leveledUp: false as const };
-      } else if (key === "trainStrength") result = await petApi.train(id, wallet, "strength");
-      else result = await petApi.train(id, wallet, "speed");
+      }
 
       setPet(result.pet);
       upsertPet(result.pet);
+      setMood(ACTION_MOOD[key]);
 
       if (result.leveledUp) {
         showToast(`${result.pet.name} reached Level ${result.pet.level}! 🎉`, "levelup");
@@ -107,18 +112,19 @@ export const PetProfile: FC = () => {
   if (loading) return <p className="text-gray-400 text-center py-20">Loading pet…</p>;
   if (!pet) return <p className="text-gray-400 text-center py-20">Pet not found.</p>;
 
-  const traits: PetTraits = JSON.parse(pet.traits);
+  const traits = describeLook(lookFromRecord(pet));
   const growthStage = growthStageForLevel(pet.level);
   const accessories = inventory.filter((entry) => entry.item.category === "COSMETIC" && entry.quantity > 0);
 
   return (
-    <div className="grid lg:grid-cols-[380px_1fr] gap-8">
-      <div className="glass rounded-3xl p-8 flex flex-col items-center gap-4 h-fit">
-        <PetViewer pet={pet} size={160} />
+    <div className="grid lg:grid-cols-[380px_1fr] gap-5 sm:gap-8">
+      <div className="glass rounded-3xl p-5 sm:p-8 flex flex-col items-center gap-4 h-fit">
+        <RarityFrame rarity={pet.rarity}>
+          <PetViewer pet={pet} size={220} mood={mood} />
+        </RarityFrame>
         <h1 className="text-2xl font-bold text-white">{pet.name}</h1>
         <div className="flex items-center gap-2 flex-wrap justify-center">
           <RarityBadge rarity={pet.rarity} />
-          <span className="text-xs text-gray-400 glass rounded-full px-2 py-1">{pet.archetype}</span>
           <span className="text-xs text-gray-400 glass rounded-full px-2 py-1">
             {GROWTH_STAGE_LABEL[growthStage]}
           </span>
@@ -181,10 +187,10 @@ export const PetProfile: FC = () => {
         <div className="glass rounded-2xl p-6">
           <h2 className="font-bold text-white mb-4">Traits</h2>
           <div className="grid sm:grid-cols-2 gap-2 text-sm">
-            {(Object.keys(traits) as (keyof PetTraits)[]).map((key) => (
-              <div key={key} className="flex justify-between border-b border-white/5 py-1.5">
-                <span className="text-gray-400">{TRAIT_LABELS[key]}</span>
-                <span className="text-gray-200 capitalize">{traits[key]?.replace(/_/g, " ")}</span>
+            {traits.map((t) => (
+              <div key={t.trait_type} className="flex justify-between border-b border-white/5 py-1.5">
+                <span className="text-gray-400">{t.trait_type}</span>
+                <span className="text-gray-200">{t.value}</span>
               </div>
             ))}
             {pet.auraType && (
@@ -203,39 +209,51 @@ export const PetProfile: FC = () => {
               <Button onClick={() => runAction("feed")} loading={busy === "feed"} disabled={busy !== null}>
                 🍖 Feed
               </Button>
-              <Button onClick={() => runAction("play")} loading={busy === "play"} disabled={busy !== null}>
-                🎾 Play
+              {/* Play = the mini-games, with this pet preselected — leveling through play. */}
+              <Button onClick={() => navigate(`/games?pet=${pet.id}`)} disabled={busy !== null}>
+                🎮 Play
               </Button>
               <Button variant="secondary" onClick={() => runAction("rest")} loading={busy === "rest"} disabled={busy !== null}>
                 😴 Rest
               </Button>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => runAction("trainStrength")}
-                  loading={busy === "trainStrength"}
-                  disabled={busy !== null}
-                >
-                  🏋️ Train STR
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => runAction("trainSpeed")}
-                  loading={busy === "trainSpeed"}
-                  disabled={busy !== null}
-                >
-                  👟 Train SPD
-                </Button>
-              </div>
             </div>
           </div>
         )}
 
         {isOwner && (
           <div className="glass rounded-2xl p-6">
-            <h2 className="font-bold text-white mb-1">Equip Accessory</h2>
+            <div className="flex items-baseline justify-between mb-1">
+              <h2 className="font-bold text-white">Training</h2>
+              <span className="text-xs text-gray-400">⚡ {pet.energy} Energy</span>
+            </div>
+            <p className="text-sm text-gray-400 mb-4">
+              Play a mini-game with {pet.name} — the better you do, the more XP and stats it gains.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {Object.values(TRAINING_GAMES)
+                .filter((g) => g.category === "pet")
+                .map((g) => (
+                <button
+                  key={g.key}
+                  onClick={() => setTraining(g.key)}
+                  className="glass rounded-xl p-4 text-left hover:bg-white/10 hover:-translate-y-0.5 transition-all"
+                >
+                  <div className="text-3xl mb-1">{g.emoji}</div>
+                  <div className="font-semibold text-white text-sm">{g.name}</div>
+                  <div className="text-xs text-emerald-300 capitalize">+{g.stat}</div>
+                  <div className="text-[11px] text-gray-500 mt-1">−{g.energyCost} ⚡</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {isOwner && (
+          <div className="glass rounded-2xl p-6">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <h2 className="font-bold text-white">Equip Accessory</h2>
+              <Link to="/shop" className="text-xs text-purple-300 hover:underline">🏪 Shop: items, horns, tails, auras →</Link>
+            </div>
             <p className="text-sm text-gray-400 mb-4">Cosmetic only — doesn't affect stats.</p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -292,6 +310,19 @@ export const PetProfile: FC = () => {
         )}
       </div>
 
+      {wallet && (
+        <TrainingModal
+          pet={pet}
+          wallet={wallet}
+          game={training}
+          onClose={() => setTraining(null)}
+          onPetUpdated={(updated) => {
+            setPet(updated);
+            upsertPet(updated);
+          }}
+        />
+      )}
+
       <SellPetModal
         open={sellOpen}
         onClose={() => setSellOpen(false)}
@@ -306,13 +337,7 @@ function actionSuccessLabel(key: ActionKey) {
   switch (key) {
     case "feed":
       return "Fed your pet 🍖";
-    case "play":
-      return "Played together 🎾";
     case "rest":
       return "Energy restored 😴";
-    case "trainStrength":
-      return "Strength increased 🏋️";
-    case "trainSpeed":
-      return "Speed increased 👟";
   }
 }

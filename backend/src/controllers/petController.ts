@@ -2,21 +2,21 @@ import { Request, Response } from "express";
 import { asyncHandler, ApiError } from "../middleware/errorHandler";
 import { isValidWalletAddress } from "../middleware/validateWallet";
 import * as petService from "../services/petService";
-import { PET_TYPES } from "../constants/petData";
+import * as trainingService from "../services/trainingService";
 
-// Rarity, DNA and traits are deliberately NOT accepted from the client —
-// they're generated server-side in petService.mintPet() so none of it can
+// Archetype, rarity, DNA and traits are deliberately NOT accepted from the
+// client — the player buys an egg and gets whatever hatches. They're
+// generated server-side in petService.mintPet() so none of it can
 // be forged. Minting also requires a verified on-chain SOL payment.
 export const mintPet = asyncHandler(async (req: Request, res: Response) => {
-  const { ownerWallet, name, type, color, paymentTxSignature } = req.body;
+  const { ownerWallet, name, paymentTxSignature } = req.body;
   if (!isValidWalletAddress(ownerWallet)) throw new ApiError(400, "Invalid ownerWallet");
-  if (!name || typeof name !== "string" || !name.trim()) throw new ApiError(400, "Name is required");
-  if (!PET_TYPES.includes(type)) throw new ApiError(400, `type must be one of ${PET_TYPES.join(", ")}`);
+  if (name !== undefined && typeof name !== "string") throw new ApiError(400, "name must be a string");
   if (!paymentTxSignature || typeof paymentTxSignature !== "string") {
     throw new ApiError(400, "paymentTxSignature is required — pay the current mint price first");
   }
 
-  const result = await petService.mintPet({ ownerWallet, name, type, color, paymentTxSignature });
+  const result = await petService.mintPet({ ownerWallet, name, paymentTxSignature });
   res.status(201).json(result);
 });
 
@@ -74,6 +74,15 @@ export const trainPet = asyncHandler(async (req: Request, res: Response) => {
   res.json(result);
 });
 
+export const renamePet = asyncHandler(async (req: Request, res: Response) => {
+  const wallet = requireCaller(req);
+  const name = req.body?.name;
+  if (typeof name !== "string") throw new ApiError(400, "name must be a string");
+  const pet = await petService.getPetById(req.params.id);
+  const updated = await petService.renamePet(pet, wallet, name);
+  res.json(updated);
+});
+
 export const equipAccessory = asyncHandler(async (req: Request, res: Response) => {
   const wallet = requireCaller(req);
   const itemKey = req.body?.itemKey ?? null;
@@ -90,4 +99,19 @@ export const recordMint = asyncHandler(async (req: Request, res: Response) => {
   const pet = await petService.getPetById(req.params.id);
   const updated = await petService.recordMint(pet, wallet, mintAddress, metadataUri);
   res.json(updated);
+});
+
+// Interactive training: open a session, play the mini-game, report the score.
+export const startTraining = asyncHandler(async (req: Request, res: Response) => {
+  const wallet = requireCaller(req);
+  const game = req.body?.game;
+  if (typeof game !== "string") throw new ApiError(400, "game is required");
+  res.status(201).json(await trainingService.startTraining(req.params.id, wallet, game));
+});
+
+export const finishTraining = asyncHandler(async (req: Request, res: Response) => {
+  const wallet = requireCaller(req);
+  const score = req.body?.score;
+  if (typeof score !== "number") throw new ApiError(400, "score must be a number");
+  res.json(await trainingService.finishTraining(req.params.id, req.params.sessionId, wallet, score));
 });

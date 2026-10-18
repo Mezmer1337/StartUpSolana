@@ -27,10 +27,13 @@ const STATEMENT = "Sign in to PetNFT. This request will not trigger a blockchain
 
 /** Frontends allowed to request a sign-in message (the signed text names the domain). */
 export function allowedOrigins(): string[] {
-  return (process.env.AUTH_ALLOWED_ORIGINS ?? "http://localhost:5173")
+  const origins = (process.env.AUTH_ALLOWED_ORIGINS ?? "http://localhost:5173")
     .split(",")
     .map((o) => o.trim().replace(/\/$/, ""))
     .filter(Boolean);
+  // On Railway the app's own public domain is always allowed (frontend and API share it).
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) origins.push(`https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+  return origins;
 }
 
 /**

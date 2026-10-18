@@ -1,0 +1,14 @@
+{
+  "name": "petnft-pitch",
+  "private": true,
+  "description": "Builds the Colosseum pitch video from the screen recordings + generated title cards",
+  "scripts": {
+    "pets": "cd ../backend && npx tsx ../pitch/make-pets.ts",
+    "build": "node build.cjs",
+    "mix": "node mix.cjs"
+  },
+  "devDependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "puppeteer-core": "^23.11.1"
+  }
+}

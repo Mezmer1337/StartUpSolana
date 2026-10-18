@@ -8,6 +8,9 @@ export interface MarketplaceListing {
   sellerWallet: string;
   priceSol: number;
   status: ListingStatus;
+  /** Set while a buyer is paying for it (a few minutes). */
+  reservedBy: string | null;
+  reservedUntil: string | null;
   createdAt: string;
   updatedAt: string;
   pet: Pet;

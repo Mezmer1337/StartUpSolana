@@ -12,7 +12,15 @@ export async function getLeaderboard(limit = 50) {
     wallet: pet.ownerWallet,
     petId: pet.id,
     petName: pet.name,
-    petType: pet.type,
+    petType: pet.archetype,
+    // Fields the shared renderer needs to draw the pet's portrait.
+    art: {
+      seedHash: pet.seedHash,
+      rarity: pet.rarity,
+      look: pet.look,
+      auraType: pet.auraType,
+      level: pet.level,
+    },
     rarity: pet.rarity,
     level: pet.level,
     xp: pet.xp,

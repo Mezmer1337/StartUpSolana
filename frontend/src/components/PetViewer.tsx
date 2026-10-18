@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import type { FC } from "react";
-import { AURA_COLOR, AURA_EMOJI, PET_EMOJI, growthStageForLevel } from "../types/pet";
-import type { Pet, PetPalette } from "../types/pet";
+import { renderPetSvgFromRecord, svgToDataUri } from "../../../shared/petArt";
+import type { PetArtRecord, PetMood } from "../../../shared/petArt";
+import type { Pet } from "../types/pet";
 
 const ACCESSORY_EMOJI: Record<string, string> = {
   party_hat: "🎉",
@@ -10,50 +12,37 @@ const ACCESSORY_EMOJI: Record<string, string> = {
 };
 
 /**
- * Renders a pet from its DNA: a procedurally-colored body blob (palette
- * primary/secondary from the generated color harmony), an aura glow ring
- * if one was rolled, and the species emoji sized by growth stage. This is
- * an honest MVP stand-in for true per-part sprite composition — see
- * README "MVP / mock" section for what a full asset pipeline would add.
+ * Draws a pet from its raw DNA columns with the shared part-based renderer
+ * (shared/petArt, compiled from the artist's Inkscape file) — the exact same picture the backend bakes into the NFT.
+ * Rendered as an <img> data URI so each pet's SVG ids stay isolated.
  */
-export const PetViewer: FC<{ pet: Pet; size?: number }> = ({ pet, size = 160 }) => {
-  const palette: PetPalette = JSON.parse(pet.palette);
-  const stage = growthStageForLevel(pet.level);
-  const scale = { BABY: 0.75, YOUNG: 0.88, ADULT: 1, EVOLVED: 1.12 }[stage];
-  const auraColor = pet.auraType ? AURA_COLOR[pet.auraType] : null;
-
-  return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      {auraColor && (
-        <div
-          className="absolute inset-0 rounded-full animate-pulse-glow"
-          style={{ boxShadow: `0 0 40px 10px ${auraColor}55`, border: `2px solid ${auraColor}88` }}
-        />
-      )}
-      <div
-        className="rounded-3xl flex items-center justify-center relative overflow-hidden"
-        style={{
-          width: size,
-          height: size,
-          background: `radial-gradient(circle at 40% 35%, ${palette.secondary}33, ${palette.primary}22)`,
-          border: `2px solid ${palette.outline}55`,
-        }}
-      >
-        <span style={{ fontSize: size * 0.55 * scale, lineHeight: 1 }}>{PET_EMOJI[pet.type]}</span>
-        {pet.equippedAccessoryKey && ACCESSORY_EMOJI[pet.equippedAccessoryKey] && (
-          <span
-            className="absolute"
-            style={{ fontSize: size * 0.22, top: size * 0.04, right: size * 0.08 }}
-          >
-            {ACCESSORY_EMOJI[pet.equippedAccessoryKey]}
-          </span>
-        )}
-        {pet.auraType && (
-          <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs" title={`${pet.auraType} Aura`}>
-            {AURA_EMOJI[pet.auraType]}
-          </span>
-        )}
-      </div>
-    </div>
+export const PetPortrait: FC<{ art: PetArtRecord; size?: number; className?: string; mood?: PetMood }> = ({
+  art,
+  size = 160,
+  className,
+  mood = "idle",
+}) => {
+  // Depend on the primitive columns (not the object) so a refetched pet
+  // with identical DNA doesn't re-render the SVG.
+  const { seedHash, rarity, look, auraType, level } = art;
+  const src = useMemo(
+    () => svgToDataUri(renderPetSvgFromRecord({ seedHash, rarity, look, auraType, level }, { mood })),
+    [seedHash, rarity, look, auraType, level, mood],
   );
+  return <img src={src} width={size} height={size} alt="" draggable={false} className={className} />;
 };
+
+/**
+ * In-game pet view: animated portrait + equipped accessory overlay. A pet
+ * with almost no energy naps unless the caller forces a mood.
+ */
+export const PetViewer: FC<{ pet: Pet; size?: number; mood?: PetMood }> = ({ pet, size = 160, mood }) => (
+  <div className="relative shrink-0" style={{ width: size, height: size }}>
+    <PetPortrait art={pet} size={size} mood={mood ?? (pet.energy < 15 ? "sleep" : "idle")} />
+    {pet.equippedAccessoryKey && ACCESSORY_EMOJI[pet.equippedAccessoryKey] && (
+      <span className="absolute" style={{ fontSize: size * 0.22, top: size * 0.02, right: size * 0.06 }}>
+        {ACCESSORY_EMOJI[pet.equippedAccessoryKey]}
+      </span>
+    )}
+  </div>
+);

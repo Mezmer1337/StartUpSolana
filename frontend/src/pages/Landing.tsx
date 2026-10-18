@@ -5,7 +5,7 @@ import { Button } from "../components/Button";
 
 const STEPS = [
   { icon: "👛", title: "Sign in with Phantom", desc: "Sign a one-time message with your Phantom wallet on Solana Devnet — no transaction, no fee, no seed phrase ever leaves your extension." },
-  { icon: "🥚", title: "Create a Pet", desc: "Choose a species, color and rarity to bring your companion to life." },
+  { icon: "🥚", title: "Hatch an Egg", desc: "Buy a mystery egg — every pet that hatches is a one-of-a-kind creature, no two alike." },
   { icon: "🎮", title: "Feed, Play & Train", desc: "Care for your pet daily to raise its stats and level it up." },
   { icon: "⛓", title: "Mint as NFT", desc: "Turn your pet into a real Metaplex-standard NFT you truly own on-chain." },
 ];

@@ -1,18 +1,15 @@
-export type PetType = "CAT" | "DOG" | "FOX" | "DRAGON";
+/** Legacy species label; pets hatched from eggs store their archetype here. */
+export type PetType = string;
 export type Rarity = "COMMON" | "UNCOMMON" | "RARE" | "EPIC" | "LEGENDARY" | "MYTHIC";
 export type Archetype = "ROUND" | "QUADRUPED" | "HUMANOID" | "BIRD" | "AQUATIC";
 export type AuraType = "FIRE" | "WATER" | "EARTH" | "AIR" | "LIGHTNING" | "SHADOW" | "LIGHT" | "VOID";
 export type GrowthStage = "BABY" | "YOUNG" | "ADULT" | "EVOLVED";
 
-export const PET_TYPES: PetType[] = ["CAT", "DOG", "FOX", "DRAGON"];
+
 export const RARITIES: Rarity[] = ["COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"];
 
-export const PET_EMOJI: Record<PetType, string> = {
-  CAT: "🐱",
-  DOG: "🐶",
-  FOX: "🦊",
-  DRAGON: "🐉",
-};
+/** 1 star for Common … 6 for Mythic — the tier is readable at a glance, even colour-blind. */
+export const RARITY_STARS: Record<Rarity, number> = { COMMON: 1, UNCOMMON: 2, RARE: 3, EPIC: 4, LEGENDARY: 5, MYTHIC: 6 };
 
 export const RARITY_COLOR: Record<Rarity, string> = {
   COMMON: "#9ca3af",
@@ -94,7 +91,8 @@ export interface Pet {
   archetype: Archetype;
   traits: string; // JSON-encoded PetTraits — parse with JSON.parse
   bodyParams: string; // JSON-encoded {width,height,size,headSize}
-  palette: string; // JSON-encoded PetPalette
+  palette: string; // JSON-encoded PetPalette (gameplay DNA; the drawn colours come from `look`)
+  look: string | null; // JSON-encoded shared/petArt PetLook — the hand-drawn parts actually shown
   traitScore: number;
   auraType: AuraType | null;
   generation: number;

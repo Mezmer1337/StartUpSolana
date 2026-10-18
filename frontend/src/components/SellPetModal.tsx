@@ -5,7 +5,7 @@ import { Button } from "./Button";
 import { useGameData } from "../context/GameDataContext";
 import { useToast } from "../context/ToastContext";
 import { extractErrorMessage, marketplaceApi } from "../services/api";
-import { PET_EMOJI } from "../types/pet";
+import { PetViewer } from "./PetViewer";
 
 interface SellPetModalProps {
   open: boolean;
@@ -65,7 +65,7 @@ export const SellPetModal: FC<SellPetModalProps> = ({ open, onClose, onListed, d
                     petId === pet.id ? "border-purple-400 bg-purple-500/20" : "border-white/10 hover:border-white/20"
                   }`}
                 >
-                  <span className="text-2xl">{PET_EMOJI[pet.type]}</span>
+                  <PetViewer pet={pet} size={40} />
                   <span className="text-sm text-white">
                     {pet.name} <span className="text-gray-500">· Lv.{pet.level}</span>
                   </span>

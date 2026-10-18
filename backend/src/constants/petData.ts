@@ -1,28 +1,30 @@
-// Rarity now lives in constants/dna.ts (6-tier, driven by Trait Score) —
-// this file only keeps the flavor/species layer (CAT/DOG/FOX/DRAGON,
-// independent of the procedural archetype) and the leveling/cooldown math.
+// Rarity lives in constants/dna.ts (6-tier, driven by Trait Score). Pets
+// are no longer chosen by species: the player buys an egg and the hatched
+// creature's archetype (body plan) comes from its DNA. This file keeps the
+// per-archetype starting stats and the leveling/cooldown math.
 
-export const PET_TYPES = ["CAT", "DOG", "FOX", "DRAGON"] as const;
-export type PetTypeKey = (typeof PET_TYPES)[number];
+import type { Archetype } from "./dna";
 
-// Base stat starting points per species — small flavour differences so
-// species choice is not purely cosmetic.
-export const PET_BASE_STATS: Record<PetTypeKey, { strength: number; speed: number; luck: number }> = {
-  CAT: { strength: 8, speed: 14, luck: 12 },
-  DOG: { strength: 12, speed: 10, luck: 8 },
-  FOX: { strength: 9, speed: 13, luck: 14 },
-  DRAGON: { strength: 15, speed: 8, luck: 6 },
+// Base stat starting points per archetype — small flavour differences so
+// the body plan you hatch is not purely cosmetic.
+export const ARCHETYPE_BASE_STATS: Record<Archetype, { strength: number; speed: number; luck: number }> = {
+  ROUND: { strength: 9, speed: 9, luck: 14 },
+  QUADRUPED: { strength: 12, speed: 13, luck: 8 },
+  HUMANOID: { strength: 14, speed: 9, luck: 10 },
+  BIRD: { strength: 8, speed: 15, luck: 11 },
+  AQUATIC: { strength: 10, speed: 12, luck: 12 },
 };
 
-// Emoji placeholders stand in for real art in this MVP — see README
-// "MVP / mock" section. Swapping in real illustrations only requires
-// changing this map.
-export const PET_IMAGE: Record<PetTypeKey, string> = {
-  CAT: "🐱",
-  DOG: "🐶",
-  FOX: "🦊",
-  DRAGON: "🐉",
-};
+export const MAX_PET_NAME_LENGTH = 32;
+
+const NAME_START = ["Bo", "Ki", "Mo", "Pi", "Lu", "Zu", "Ra", "No", "Fi", "Ta", "Su", "Vi", "Do", "Ye"];
+const NAME_END = ["bo", "ki", "mi", "ra", "lo", "zz", "py", "nu", "to", "xi", "ly", "rk", "sh", "mo"];
+
+/** Default name for a freshly hatched pet, derived from its seedHash. */
+export function defaultPetName(seedHash: string): string {
+  const n = (i: number) => parseInt(seedHash.slice(i, i + 2), 16);
+  return NAME_START[n(0) % NAME_START.length] + NAME_END[n(2) % NAME_END.length] + (n(4) % 2 ? NAME_END[n(6) % NAME_END.length] : "");
+}
 
 /**
  * XP required to REACH a given level (level 1 = 0 XP).

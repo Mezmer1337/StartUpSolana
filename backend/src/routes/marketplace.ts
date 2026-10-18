@@ -7,6 +7,7 @@ const router = Router();
 router.get("/", marketplaceController.getListings);
 router.post("/list", requireSignedInWallet("sellerWallet"), marketplaceController.createListing);
 router.post("/:id/cancel", requireSignedInWallet("sellerWallet"), marketplaceController.cancelListing);
+router.post("/:id/reserve", requireSignedInWallet("buyerWallet"), marketplaceController.reserveListing);
 router.post("/buy", requireSignedInWallet("buyerWallet"), marketplaceController.buyListing);
 
 export default router;

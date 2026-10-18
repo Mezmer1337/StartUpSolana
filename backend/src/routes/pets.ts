@@ -13,6 +13,9 @@ router.post("/:id/play", asOwner, petController.playWithPet);
 router.post("/:id/rest", asOwner, petController.restPet);
 router.post("/:id/train", asOwner, petController.trainPet);
 router.post("/:id/equip", asOwner, petController.equipAccessory);
+router.post("/:id/rename", asOwner, petController.renamePet);
+router.post("/:id/training/start", asOwner, petController.startTraining);
+router.post("/:id/training/:sessionId/finish", asOwner, petController.finishTraining);
 // POST /api/pets/:id/mint — records the *separate* on-chain Metaplex NFT mint for an existing pet.
 router.post("/:id/mint", asOwner, petController.recordMint);
 router.get("/wallet/:wallet", petController.getPetsForWallet);

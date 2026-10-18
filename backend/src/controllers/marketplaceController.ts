@@ -4,9 +4,9 @@ import { isValidWalletAddress } from "../middleware/validateWallet";
 import * as marketplaceService from "../services/marketplaceService";
 
 export const getListings = asyncHandler(async (req: Request, res: Response) => {
-  const { type, rarity, minPrice, maxPrice, minLevel } = req.query;
+  const { archetype, rarity, minPrice, maxPrice, minLevel } = req.query;
   const listings = await marketplaceService.listActiveListings({
-    type: type as string | undefined,
+    archetype: archetype as string | undefined,
     rarity: rarity as string | undefined,
     minPrice: minPrice ? Number(minPrice) : undefined,
     maxPrice: maxPrice ? Number(maxPrice) : undefined,
@@ -30,10 +30,17 @@ export const cancelListing = asyncHandler(async (req: Request, res: Response) =>
   res.json(listing);
 });
 
+export const reserveListing = asyncHandler(async (req: Request, res: Response) => {
+  const { buyerWallet } = req.body;
+  if (!isValidWalletAddress(buyerWallet)) throw new ApiError(400, "Invalid buyerWallet");
+  res.json(await marketplaceService.reserveListing(buyerWallet, req.params.id));
+});
+
 export const buyListing = asyncHandler(async (req: Request, res: Response) => {
   const { buyerWallet, listingId, txSignature } = req.body;
   if (!isValidWalletAddress(buyerWallet)) throw new ApiError(400, "Invalid buyerWallet");
   if (!listingId) throw new ApiError(400, "listingId is required");
+  if (typeof txSignature !== "string" || !txSignature) throw new ApiError(400, "txSignature is required");
   const result = await marketplaceService.buyListing(buyerWallet, listingId, txSignature);
   res.json(result);
 });

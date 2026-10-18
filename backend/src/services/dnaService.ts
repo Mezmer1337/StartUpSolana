@@ -23,6 +23,8 @@ import {
   rarityFromScore,
 } from "../constants/dna";
 import { generatePalette, Palette } from "./colorService";
+import { computeVisualKey, rollLook } from "../../../shared/petArt";
+import type { PetLook } from "../../../shared/petArt";
 
 export interface PetTraits {
   ears?: string;
@@ -53,6 +55,13 @@ export interface PetDna {
   traitScore: number;
   rarity: RarityKey;
   auraType: AuraType | null;
+}
+
+export interface UniquePetDna extends PetDna {
+  /** Hand-drawn look rolled at hatch time — stored in Pet.look. */
+  look: PetLook;
+  /** sha256 of the quantised look — stored in the UNIQUE Pet.visualKey column. */
+  visualKey: string;
 }
 
 /** sha256(seed) as a hex string — the seed itself is never persisted. */
@@ -196,25 +205,35 @@ export function computeDnaHash(seedHash: string, derived: Omit<PetDna, "seedHash
   return createHash("sha256").update(payload).digest("hex");
 }
 
+export function computeVisualKeyHash(look: PetLook, auraType: string | null): string {
+  return createHash("sha256").update(computeVisualKey(look, auraType)).digest("hex");
+}
+
 /**
- * Generates a full, deterministic pet DNA from a wallet+name, retrying
- * with a fresh seed on the astronomically unlikely event of a dnaHash
- * collision with an existing pet (the brief explicitly calls out that a
- * 256-bit hash alone isn't a *proof* of uniqueness — this closes the loop
- * with a real DB check rather than just asserting it can't happen).
+ * Hatches a fresh egg: generates a full, deterministic pet DNA and re-rolls
+ * with a fresh seed until the result is unique on BOTH axes:
+ *  - dnaHash   — the exact DNA (the brief: a 256-bit hash alone isn't a
+ *                *proof* of uniqueness, so we check the DB)
+ *  - visualKey — what the pet LOOKS like, quantised to visible steps, so
+ *                no two pets are lookalikes even if their raw DNA differs.
+ * With ~10^9 distinguishable looks (parts × palettes × iris colours) a re-roll is rare; MAX_ATTEMPTS only
+ * guards against a pathological catalog misconfiguration.
  */
-export async function generateUniquePetDna(wallet: string, petName: string): Promise<PetDna> {
-  const MAX_ATTEMPTS = 5;
+export async function generateUniquePetDna(wallet: string, petName: string): Promise<UniquePetDna> {
+  const MAX_ATTEMPTS = 20;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const seed = buildGenerationSeed(wallet, petName);
     const seedHash = hashSeed(seed);
     const derived = deriveDnaFromSeedHash(seedHash);
     const dnaHash = computeDnaHash(seedHash, derived);
+    // Rarer pets are likelier to roll the optional parts (horns, tail).
+    const look = rollLook(seedHash, derived.rarity);
+    const visualKey = computeVisualKeyHash(look, derived.auraType);
 
-    const existing = await prisma.pet.findUnique({ where: { dnaHash } });
+    const existing = await prisma.pet.findFirst({ where: { OR: [{ dnaHash }, { visualKey }] }, select: { id: true } });
     if (!existing) {
-      return { seedHash, dnaHash, ...derived };
+      return { seedHash, dnaHash, look, visualKey, ...derived };
     }
   }
-  throw new Error("Failed to generate a unique pet DNA after multiple attempts");
+  throw new Error("Failed to hatch a visually unique pet after multiple attempts");
 }

@@ -8,7 +8,7 @@ import { useWalletBalance } from "../hooks/useWalletBalance";
 import { Button } from "../components/Button";
 import { useToast } from "../context/ToastContext";
 import { dailyRewardApi, extractErrorMessage } from "../services/api";
-import { PET_EMOJI } from "../types/pet";
+import { PetViewer } from "../components/PetViewer";
 import { Link } from "react-router-dom";
 
 export const Profile: FC = () => {
@@ -81,7 +81,7 @@ export const Profile: FC = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {pets.map((pet) => (
             <Link key={pet.id} to={`/pets/${pet.id}`} className="glass rounded-xl p-4 flex items-center gap-3 hover:bg-white/10">
-              <span className="text-3xl">{PET_EMOJI[pet.type]}</span>
+              <PetViewer pet={pet} size={48} />
               <div>
                 <p className="text-sm font-medium text-white">{pet.name}</p>
                 <p className="text-xs text-gray-400">Lv. {pet.level}</p>

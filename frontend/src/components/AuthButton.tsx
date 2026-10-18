@@ -17,8 +17,9 @@ export const AuthButton: FC<{ large?: boolean }> = ({ large }) => {
         <span className="text-xs text-green-300 glass rounded-full px-3 py-1.5 font-mono" title={wallet}>
           ✓ {short(wallet)}
         </span>
-        <Button variant="secondary" onClick={signOut} className="!py-1.5 !px-3 !text-xs">
-          Sign out
+        <Button variant="secondary" onClick={signOut} className="!py-1.5 !px-3 !text-xs whitespace-nowrap">
+          <span className="sm:hidden">Exit</span>
+          <span className="hidden sm:inline">Sign out</span>
         </Button>
       </div>
     );
@@ -40,8 +41,17 @@ export const AuthButton: FC<{ large?: boolean }> = ({ large }) => {
   }
 
   return (
-    <Button onClick={signIn} disabled={status === "connecting"} className={size}>
-      {status === "connecting" ? "Connecting…" : "Sign in with Phantom"}
+    <Button onClick={signIn} disabled={status === "connecting"} className={`whitespace-nowrap ${size}`}>
+      {status === "connecting" ? (
+        "Connecting…"
+      ) : large ? (
+        "Sign in with Phantom"
+      ) : (
+        <>
+          <span className="sm:hidden">Sign in</span>
+          <span className="hidden sm:inline">Sign in with Phantom</span>
+        </>
+      )}
     </Button>
   );
 };

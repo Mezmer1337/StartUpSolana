@@ -40,7 +40,7 @@ model Pet {
   owner            User      @relation(fields: [ownerWallet], references: [walletAddress])
 
   name             String
-  type             String    // enum-like: CAT | DOG | FOX | DRAGON (flavor label alongside archetype)
+  type             String    // legacy species label; new pets hatch from an egg and store their archetype here
   color            String    @default("#8b5cf6")
   rarity           String    @default("COMMON") // enum-like: COMMON | UNCOMMON | RARE | EPIC | LEGENDARY | MYTHIC
 
@@ -51,6 +51,14 @@ model Pet {
   traits           String    // JSON-encoded PetTraits (ears/eyes/mouth/tail/legs/wings/fins/special/pattern)
   bodyParams       String    // JSON-encoded BodyParams (width/height/size/headSize, each 0.8-1.2)
   palette          String    // JSON-encoded Palette (baseHue/harmony/primary/secondary/patternColor/accent/outline)
+  // JSON shared/petArt PetLook — which hand-drawn variant of every part,
+  // palette and iris colours. Rolled once at hatch time and stored, so
+  // adding variants to the art file never changes existing pets.
+  look             String?
+  // sha256 of shared/petArt computeVisualKey(look) — what the pet LOOKS
+  // like, quantised to visible steps. Unique so no two pets look alike.
+  // Null for pets created before the egg system.
+  visualKey        String?   @unique
   traitScore       Int       @default(0)
   auraType         String?   // FIRE | WATER | EARTH | AIR | LIGHTNING | SHADOW | LIGHT | VOID | null — cosmetic only
   generation       Int       @default(1)
@@ -82,8 +90,29 @@ model Pet {
 
   listings         MarketplaceListing[]
   transactions     Transaction[]
+  trainingSessions TrainingSession[]
 
   @@index([ownerWallet])
+}
+
+// One training mini-game run (see backend/src/services/trainingService.ts).
+// Opened server-side BEFORE the game starts, so the finish request can be
+// checked against real elapsed time — a client can't just POST "score 100".
+model TrainingSession {
+  id            String    @id @default(cuid())
+  petId         String
+  pet           Pet       @relation(fields: [petId], references: [id])
+  walletAddress String
+  game          String    // POWER | HOP | CATCH (shared/game/training.ts)
+  status        String    @default("ACTIVE") // ACTIVE | DONE | EXPIRED
+  score         Int?
+  xpAwarded     Int?
+  statGain      Int?
+  startedAt     DateTime  @default(now())
+  finishedAt    DateTime?
+
+  @@index([petId, status])
+  @@index([walletAddress, startedAt])
 }
 
 // One row per confirmed on-chain mint-payment transfer to the treasury —
@@ -161,6 +190,21 @@ model Item {
   inventoryEntries InventoryItem[]
 }
 
+// One row per shop purchase. For SOL purchases the on-chain payment
+// signature is unique, so one transfer can never pay for two orders.
+model ShopPurchase {
+  id               String   @id @default(cuid())
+  walletAddress    String
+  itemKey          String
+  quantity         Int
+  currency         String   // PETCOIN | SOL
+  amount           Float    // PetCoins spent, or SOL paid
+  paymentSignature String?  @unique
+  createdAt        DateTime @default(now())
+
+  @@index([walletAddress, createdAt])
+}
+
 model InventoryItem {
   id           String   @id @default(cuid())
   ownerWallet  String
@@ -181,6 +225,13 @@ model MarketplaceListing {
   sellerWallet String
   priceSol     Float
   status       String   @default("ACTIVE") // enum-like: ACTIVE | SOLD | CANCELLED
+  // A buyer reserves the listing for a few minutes while paying, so two
+  // people can't both send SOL for the same pet (marketplaceService.reserve).
+  reservedBy    String?
+  reservedUntil DateTime?
+  // Signature of the on-chain SOL payment that bought it. Unique = a
+  // transfer can't be replayed to buy a second pet.
+  paymentSignature String? @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

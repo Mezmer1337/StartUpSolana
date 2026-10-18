@@ -1,6 +1,6 @@
 import type { Rarity } from "./pet";
 
-export type ItemCategory = "FOOD" | "TOY" | "POTION" | "TRAINING" | "COSMETIC";
+export type ItemCategory = "FOOD" | "TOY" | "POTION" | "TRAINING" | "COSMETIC" | "MYSTIC";
 
 export interface ItemDefinition {
   key: string;

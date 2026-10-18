@@ -27,9 +27,12 @@ export function useWalletBalance(intervalMs = 15000) {
 
     fetchBalance();
     const id = setInterval(fetchBalance, intervalMs);
+    // Re-read right away after a payment (services/marketplacePayment.ts).
+    window.addEventListener("wallet-balance-refresh", fetchBalance);
     return () => {
       cancelled = true;
       clearInterval(id);
+      window.removeEventListener("wallet-balance-refresh", fetchBalance);
     };
   }, [connection, publicKey, intervalMs]);
 

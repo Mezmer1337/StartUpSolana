@@ -4,7 +4,7 @@ import { PetCard } from "../components/PetCard";
 import { SignInPrompt } from "../components/AuthButton";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/Button";
-import { CreatePetModal } from "../components/CreatePetModal";
+import { HatchEggModal } from "../components/HatchEggModal";
 import { useGameData } from "../context/GameDataContext";
 
 export const MyPets: FC = () => {
@@ -16,9 +16,9 @@ export const MyPets: FC = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between gap-3 mb-5 sm:mb-8">
         <h1 className="text-2xl font-bold">My Pets</h1>
-        <Button onClick={() => setCreateOpen(true)}>+ Create Pet</Button>
+        <Button onClick={() => setCreateOpen(true)}>🥚 Buy an Egg</Button>
       </div>
 
       {loading && <p className="text-gray-400 text-sm">Loading pets…</p>}
@@ -27,7 +27,7 @@ export const MyPets: FC = () => {
         <div className="glass rounded-2xl p-12 text-center flex flex-col items-center gap-4">
           <div className="text-5xl">🥚</div>
           <p className="text-gray-400">You don't have any pets yet.</p>
-          <Button onClick={() => setCreateOpen(true)}>Create your first pet</Button>
+          <Button onClick={() => setCreateOpen(true)}>Hatch your first pet</Button>
         </div>
       )}
 
@@ -37,7 +37,7 @@ export const MyPets: FC = () => {
         ))}
       </div>
 
-      <CreatePetModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <HatchEggModal open={createOpen} onClose={() => setCreateOpen(false)} />
     </div>
   );
 };
