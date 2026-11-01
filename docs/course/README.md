@@ -1,8 +1,8 @@
-# Курс Solana: недели 2–7 на примере PetNFT
+# Курс Solana: недели 2–7 и задания 9–13 на примере PetNFT
 
-Задания недель 2–7 из силлабуса, выполненные на нашем проекте PetNFT, а не
-на абстрактных примерах. Каждая неделя — рабочий код в репозитории плюс
-разбор в отдельном файле.
+Задания недель 2–7 и задания 9–13 (Vault, Raydium) из силлабуса, выполненные
+на нашем проекте PetNFT, а не на абстрактных примерах. Каждая тема — рабочий
+код в репозитории плюс разбор в отдельном файле.
 
 | Неделя | Тема (силлабус) | Задание | Что сделано в PetNFT | Где |
 |---|---|---|---|---|
@@ -12,6 +12,14 @@
 | 5 | Anchor Framework | Counter Program и взаимодействие через client | Anchor-программа `pet_counter`: счётчик ухода за питомцем (PDA на пару владелец + питомец), события, ошибки, закрытие аккаунта; TS-клиент и mocha-тесты. Заодно `programs/petnft` переведён на Anchor 1.2 | [week-05](week-05-anchor-counter.md), `programs/pet_counter/`, `clients/pet-counter.ts`, `tests/` |
 | 6 | Accounts, PDAs и архитектура программ | Децентрализованный on-chain профиль с PDA | Программа `player_profile`: профиль в PDA `["profile", wallet]`, уникальные ники через PDA `["username", ник]`, закреплённый питомец — проверенный `PetRecord` программы `petnft`. Клиент, блок **On-chain profile** в интерфейсе, карта аккаунтов всего проекта | [week-06](week-06-pda-profile.md), `programs/player_profile/`, `clients/player-profile.ts`, `frontend/src/components/OnchainProfileCard.tsx` |
 | 7 | SPL Tokens и Token Extensions | Собственный токен: выпуск, transfer, metadata и взаимодействие через client | Внутриигровая валюта **PETCOIN (`PET`)** на Token-2022: комиссия 1% за перевод (TransferFeeConfig, сбор удержанного в казну), имя/символ/uri и свои поля прямо в mint (MetadataPointer + TokenMetadata). CLI: create/mint/transfer/meta/holders/collect-fees/burn | [week-07](week-07-spl-token.md), `clients/petcoin-core.ts`, `clients/petcoin.ts`, `tests/petcoin.ts` |
+
+| Задание | Тема (силлабус) | Что сделано в PetNFT | Где |
+|---|---|---|---|
+| 9 (РО2) | Vault: депозит и share-токены | Anchor-программа `pet_vault`: vault на mint (PETCOIN), депозит → share-токены по курсу `assets/supply` с виртуальным смещением против инфляционной атаки; shares считаются от **дошедшего** (комиссия Token-2022 1%) | [tasks-09-10](tasks-09-10-vault.md), `programs/pet_vault/`, `clients/pet-vault.ts`, `tests/pet-vault.ts` |
+| 10 (РО3) | Вывод средств через CPI | `withdraw`: сжечь shares (подпись пользователя), перевести долю из vault CPI-вызовом с **подписью PDA** (`new_with_signer`), `min_assets` против проскальзывания | то же |
+| 11 (РО3) | Пулы AMM и CLMM Raydium | Тестовые токены FOOD/GEM, **CPMM-пул** (x·y=k) и **CLMM-пул** в Devnet; разбор тиков, `sqrtPriceX64`, fee-тиров | [tasks-11-13](tasks-11-13-raydium.md), `clients/raydium-core.ts`, `clients/raydium.ts` |
+| 12 (РО3) | Swap через Raydium | Котировка по tick arrays, `minAmountOut` = котировка − slippage; программа отклоняет худшее исполнение (`TooLittleOutputReceived`, показано в Devnet) | то же |
+| 13 (РО3) | Управление позицией в CLMM | Позиция-NFT: open в диапазоне, несобранные комиссии, collect, close, **rebalance** (вышла из диапазона → закрыть, выровнять токены, открыть вокруг новой цены) | то же |
 
 ## Что проверено, а что нет
 
@@ -37,6 +45,13 @@
 - **Неделя 7:** PETCOIN **выпущен в Devnet**
   ([`E3tAx6RP…KunA`](https://explorer.solana.com/address/E3tAx6RP3T83PcQ5FRfxhtpdVo26icMTpeCMqwt7KunA?cluster=devnet)),
   виден в Phantom; **12/12 тестов против Devnet** и локально.
+- **Задания 9–10:** `pet_vault` **в Devnet**
+  ([`5jNEZk5S…SAFP`](https://explorer.solana.com/address/5jNEZk5S3JVBYESfjHQGX53xybUY6XHkc7xmpb2LSAFP?cluster=devnet)),
+  4 Rust-теста математики, **12/12 mocha против Devnet** и на surfpool; живой
+  vault для PETCOIN: депозит, награда, вывод через CPI.
+- **Задания 11–13:** в Devnet созданы токены FOOD/GEM, CPMM- и CLMM-пулы,
+  выполнены swap'ы (один отклонён программой по `minAmountOut`), открыты,
+  собраны и перемещены позиции. Автотестов нет: Raydium есть только в Devnet.
 
 Всё собрано и запущено на Windows без WSL, инструкция и найденные подвохи —
 в [windows-toolchain.md](windows-toolchain.md). Адреса и подписи транзакций —
@@ -59,4 +74,11 @@ npm install && anchor build && anchor test --provider.cluster localnet
 
 # Неделя 7: токен PETCOIN (Token-2022), сборка не нужна
 npm run petcoin -- create && npm run petcoin -- mint --amount 1000 && npm run test:petcoin
+
+# Задания 9–10: vault (после anchor build)
+npm run vault -- init && npm run vault -- deposit --amount 100 && npm run test:vault
+
+# Задания 11–13: Raydium в Devnet, сборка не нужна
+npm run raydium -- tokens && npm run raydium -- clmm-create --price 2
+npm run raydium -- open --lower 1.8 --upper 2.2 --amount 100 && npm run raydium -- swap --in FOOD --amount 10
 ```

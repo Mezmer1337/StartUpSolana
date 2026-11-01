@@ -30,6 +30,9 @@ test-ledger/
 # PETCOIN mint addresses created by clients/petcoin.ts, per RPC endpoint
 clients/.petcoin-mints.json
 
+# Raydium devnet test tokens and pools created by clients/raydium.ts
+clients/.raydium-devnet.json
+
 # npm run art:gallery output
 art-gallery.html
 

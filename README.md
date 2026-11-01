@@ -12,11 +12,13 @@ Marketplace.
 реально работает end-to-end, а что упрощено и почему — в разделе
 [MVP / заглушки](#mvp--заглушки).
 
-> **Курс Solana, недели 2–7.** Задания силлабуса выполнены на этом проекте:
-> Transaction Detective (неделя 2), Rust CLI `petdna` (3), нативная программа
-> `pet_passport` (4), Anchor Counter `pet_counter` (5), on-chain профиль
-> игрока на PDA `player_profile` (6) и токен PETCOIN на Token-2022 с
-> комиссией и метаданными в mint (7). Обзор и разборы — в
+> **Курс Solana, недели 2–7 и задания 9–13.** Задания силлабуса выполнены на
+> этом проекте: Transaction Detective (неделя 2), Rust CLI `petdna` (3),
+> нативная программа `pet_passport` (4), Anchor Counter `pet_counter` (5),
+> on-chain профиль игрока на PDA `player_profile` (6), токен PETCOIN на
+> Token-2022 с комиссией и метаданными в mint (7), vault PETCOIN с
+> share-токенами и выводом через CPI `pet_vault` (задания 9–10) и пулы,
+> swap и позиции CLMM Raydium в Devnet (задания 11–13). Обзор и разборы — в
 > [docs/course](docs/course/README.md).
 
 ## Содержание

@@ -1,0 +1,26 @@
+[package]
+name = "pet_vault"
+version = "0.1.0"
+description = "PetNFT token vault: deposits for share tokens, withdrawals through PDA-signed CPI (course tasks 9-10)"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "pet_vault"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = { version = "1.2.0", features = ["init-if-needed"] }
+anchor-spl = "1.2.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

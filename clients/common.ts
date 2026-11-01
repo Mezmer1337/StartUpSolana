@@ -35,13 +35,14 @@ export const explorerTx = (signature: string) => `https://explorer.solana.com/tx
 export const explorerAddress = (address: PublicKey | string) =>
   `https://explorer.solana.com/address/${address.toString()}${explorerQuery()}`;
 
-/** `--name value` style options; positional[0] is the command. */
+/** `--name value` style options; a `--flag` followed by another option (or nothing) gets ""; positional[0] is the command. */
 export function parseArgs(argv = process.argv.slice(2)) {
   const options = new Map<string, string>();
   const positional: string[] = [];
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i].startsWith("--")) options.set(argv[i].slice(2), argv[++i] ?? "");
-    else positional.push(argv[i]);
+    if (!argv[i].startsWith("--")) positional.push(argv[i]);
+    else if (i + 1 < argv.length && !argv[i + 1].startsWith("--")) options.set(argv[i].slice(2), argv[++i]);
+    else options.set(argv[i].slice(2), "");
   }
   return { command: positional[0], option: (name: string) => options.get(name) };
 }
