@@ -1,0 +1,29 @@
+# Rust / Cargo
+target/
+
+# Node
+node_modules/
+yarn-error.log
+
+# Anchor
+.anchor/
+app/dist/
+# Локальные настройки сайта (свой RPC с ключом и т.п.)
+app/.env*.local
+# Скомпилированный бинарник (большой, генерируется через anchor build)
+target/deploy/*.so
+
+# Ключи — НИКОГДА не коммитить!
+target/deploy/*-keypair.json
+**/*.keypair.json
+wallet.json
+id.json
+devnet-wallet.json
+
+# IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Адреса, созданные скриптом create-pool (у каждого студента свои)
+devnet-pool.json
